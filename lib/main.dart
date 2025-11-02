@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'game/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,29 +11,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Play Tik',
+      title: 'Shipper Sim',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomePage(),
+      home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Play Tik'),
-      ),
-      body: const Center(
-        child: Text('Welcome to Play Tik'),
-      ),
     );
   }
 }
