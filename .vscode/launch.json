@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "playtik",
+            "name": "shipper-sim",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "playtik (profile mode)",
+            "name": "shipper-sim (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "playtik (release mode)",
+            "name": "shipper-sim (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

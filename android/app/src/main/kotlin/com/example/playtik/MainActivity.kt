@@ -1,4 +1,4 @@
-package com.example.playtik
+package com.example.shipper_sim
 
 import io.flutter.embedding.android.FlutterActivity
 
