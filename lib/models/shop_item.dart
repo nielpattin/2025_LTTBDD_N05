@@ -1,9 +1,17 @@
-enum ShopItemType { seedBall, fertilizer, potUpgrade }
+enum ShopItemType { seedBall, fertilizer, slotExpansion }
+
+enum BallTier { common, rare, legendary }
+
+const ballTierNames = {
+  BallTier.common: 'Common',
+  BallTier.rare: 'Rare',
+  BallTier.legendary: 'Legendary',
+};
 
 const shopItemTypeNames = {
   ShopItemType.seedBall: 'Quả Cầu Hạt Giống',
   ShopItemType.fertilizer: 'Phân Bón',
-  ShopItemType.potUpgrade: 'Nâng Cấp Chậu',
+  ShopItemType.slotExpansion: 'Mở Rộng Vườn',
 };
 
 class ShopItem {
@@ -14,6 +22,9 @@ class ShopItem {
   final String description;
   final String sprite;
   final Map<String, dynamic> data;
+  final BallTier? tier;
+  final int? starCost;
+  final int? unlockFloor;
 
   const ShopItem({
     required this.id,
@@ -23,6 +34,9 @@ class ShopItem {
     required this.description,
     required this.sprite,
     this.data = const {},
+    this.tier,
+    this.starCost,
+    this.unlockFloor,
   });
 
   Map<String, dynamic> toJson() {
@@ -34,6 +48,9 @@ class ShopItem {
       'description': description,
       'sprite': sprite,
       'data': data,
+      'tier': tier?.name,
+      'starCost': starCost,
+      'unlockFloor': unlockFloor,
     };
   }
 
@@ -46,6 +63,11 @@ class ShopItem {
       description: json['description'] as String,
       sprite: json['sprite'] as String,
       data: json['data'] as Map<String, dynamic>? ?? {},
+      tier: json['tier'] != null 
+          ? BallTier.values.firstWhere((e) => e.name == json['tier'])
+          : null,
+      starCost: json['starCost'] as int?,
+      unlockFloor: json['unlockFloor'] as int?,
     );
   }
 }
