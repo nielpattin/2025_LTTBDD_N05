@@ -19,7 +19,7 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('🌱', style: TextStyle(fontSize: 120)),
+                const Icon(Icons.spa, size: 120, color: Colors.green),
                 const SizedBox(height: 24),
                 const Text(
                   'PLANTMON',

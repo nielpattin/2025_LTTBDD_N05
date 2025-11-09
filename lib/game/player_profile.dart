@@ -1,39 +1,276 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/storage_service.dart';
+import '../models/achievement.dart';
+import '../models/care_resources.dart';
+import '../config/game_balance.dart';
 
 class PlayerProfile extends ChangeNotifier {
-  int _coins = 0;
+  late final SharedPreferencesAsync _prefs = StorageService().prefs;
+  int _stars = 0;
+  bool _isFirstTime = true;
+  int _level = 1;
+  int _exp = 0;
+  int _battleWins = 0;
+  int _totalPlantmons = 0;
+  int _evolutionCount = 0;
+  int _towerFloor = 1;
+  List<Achievement> _achievements = [];
+  int _careStreak = 0;
+  DateTime? _lastStreakDate;
+  CareResources _careResources = CareResources();
 
-  int get coins => _coins;
+  int get stars => _stars;
+  bool get isFirstTime => _isFirstTime;
+  int get level => _level;
+  int get exp => _exp;
+  int get battleWins => _battleWins;
+  int get totalPlantmons => _totalPlantmons;
+  int get evolutionCount => _evolutionCount;
+  int get towerFloor => _towerFloor;
+  List<Achievement> get achievements => List.unmodifiable(_achievements);
+  int get careStreak => _careStreak;
+  DateTime? get lastStreakDate => _lastStreakDate;
+  CareResources get careResources => _careResources.regenerate();
+
+  int get expToNextLevel => GameBalance.getPlayerExpRequirement(_level);
+
+  double get expProgress => exp / expToNextLevel;
 
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    _coins = prefs.getInt('coins') ?? 0;
+    _stars = await _prefs.getInt('stars') ?? 0;
+    _isFirstTime = await _prefs.getBool('isFirstTime') ?? true;
+    _level = await _prefs.getInt('level') ?? 1;
+    _exp = await _prefs.getInt('exp') ?? 0;
+    _battleWins = await _prefs.getInt('battleWins') ?? 0;
+    _totalPlantmons = await _prefs.getInt('totalPlantmons') ?? 0;
+    _evolutionCount = await _prefs.getInt('evolutionCount') ?? 0;
+    _towerFloor = await _prefs.getInt('towerFloor') ?? 1;
+
+    // Load care streak system
+    _careStreak = await _prefs.getInt('careStreak') ?? 0;
+    final lastStreakDateStr = await _prefs.getString('lastStreakDate');
+    _lastStreakDate = lastStreakDateStr != null
+        ? DateTime.parse(lastStreakDateStr)
+        : null;
+
+    final achievementsJson = await _prefs.getString('achievements');
+    if (achievementsJson != null) {
+      final List<dynamic> decoded = jsonDecode(achievementsJson);
+      _achievements = decoded
+          .map((json) => Achievement.fromJson(json))
+          .toList();
+    } else {
+      _achievements = List.from(defaultAchievements);
+    }
+
+    final careResourcesJson = await _prefs.getString('careResources');
+    if (careResourcesJson != null) {
+      _careResources = CareResources.fromJson(jsonDecode(careResourcesJson));
+    } else {
+      _careResources = CareResources();
+    }
+
     notifyListeners();
   }
 
   Future<void> save() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('coins', _coins);
+    await _prefs.setInt('stars', _stars);
+    await _prefs.setBool('isFirstTime', _isFirstTime);
+    await _prefs.setInt('level', _level);
+    await _prefs.setInt('exp', _exp);
+    await _prefs.setInt('battleWins', _battleWins);
+    await _prefs.setInt('totalPlantmons', _totalPlantmons);
+    await _prefs.setInt('evolutionCount', _evolutionCount);
+    await _prefs.setInt('towerFloor', _towerFloor);
+
+    // Save care streak system
+    await _prefs.setInt('careStreak', _careStreak);
+    if (_lastStreakDate != null) {
+      await _prefs.setString(
+        'lastStreakDate',
+        _lastStreakDate!.toIso8601String(),
+      );
+    } else {
+      await _prefs.remove('lastStreakDate');
+    }
+
+    final achievementsJson = jsonEncode(
+      _achievements.map((a) => a.toJson()).toList(),
+    );
+    await _prefs.setString('achievements', achievementsJson);
+
+    final careResourcesJson = jsonEncode(_careResources.toJson());
+    await _prefs.setString('careResources', careResourcesJson);
   }
 
-  void addCoins(int amount) {
-    _coins += amount;
-    save();
+  Future<void> addStars(int amount) async {
+    _stars += amount;
+    await save();
     notifyListeners();
   }
 
-  void spendCoins(int amount) {
-    if (_coins >= amount) {
-      _coins -= amount;
-      save();
+  Future<void> spendStars(int amount) async {
+    if (_stars >= amount) {
+      _stars -= amount;
+      await save();
       notifyListeners();
     }
   }
 
-  Future<void> resetProfile() async {
-    _coins = 0;
+  bool canAffordStars(int amount) {
+    return _stars >= amount;
+  }
+
+  Future<void> addExp(int amount) async {
+    _exp += amount;
+    _checkLevelUp();
     await save();
     notifyListeners();
+  }
+
+  void _checkLevelUp() {
+    while (_exp >= expToNextLevel && _level < 99) {
+      _exp -= expToNextLevel;
+      _level++;
+      _updateAchievement('level_5', _level);
+      _updateAchievement('expert_trainer', _level);
+      _updateAchievement('master_trainer', _level);
+    }
+  }
+
+  Future<void> addBattleWin() async {
+    _battleWins++;
+    _updateAchievement('battle_ready', _battleWins);
+    _updateAchievement('warrior', _battleWins);
+    _updateAchievement('champion', _battleWins);
+    await save();
+    notifyListeners();
+  }
+
+  Future<void> updatePlantmonCount(int count) async {
+    _totalPlantmons = count;
+    _updateAchievement('first_plantmon', count);
+    _updateAchievement('collector_i', count);
+    _updateAchievement('collector_ii', count);
+    _updateAchievement('full_garden', count);
+    await save();
+    notifyListeners();
+  }
+
+  Future<void> addEvolution() async {
+    _evolutionCount++;
+    _updateAchievement('evolver', _evolutionCount);
+    await save();
+    notifyListeners();
+  }
+
+  void _updateAchievement(String id, int progress) {
+    final index = _achievements.indexWhere((a) => a.id == id);
+    if (index >= 0) {
+      _achievements[index] = _achievements[index].copyWith(progress: progress);
+    }
+  }
+
+  Future<void> completeOnboarding() async {
+    _isFirstTime = false;
+    _stars = GameBalance.startingStars;
+    _level = 1;
+    _exp = 0;
+    await save();
+    notifyListeners();
+  }
+
+  Future<void> incrementTowerFloor() async {
+    _towerFloor++;
+    await save();
+    notifyListeners();
+  }
+
+  Future<void> resetProfile() async {
+    _stars = 0;
+    _isFirstTime = true;
+    _level = 1;
+    _exp = 0;
+    _battleWins = 0;
+    _totalPlantmons = 0;
+    _evolutionCount = 0;
+    _towerFloor = 1;
+    _careStreak = 0;
+    _lastStreakDate = null;
+    _achievements = List.from(defaultAchievements);
+    _careResources = CareResources();
+    await save();
+    notifyListeners();
+  }
+
+  Future<void> updateCareStreak() async {
+    final now = DateTime.now();
+
+    // If last streak date is null or was yesterday, update streak
+    if (_lastStreakDate == null) {
+      _careStreak = 1;
+      _lastStreakDate = now;
+    } else {
+      final daysSinceLastStreak = now.difference(_lastStreakDate!).inDays;
+
+      if (daysSinceLastStreak == 0) {
+        // Already cared today, no change
+      } else if (daysSinceLastStreak == 1) {
+        // Cared yesterday, continue streak
+        _careStreak++;
+        _lastStreakDate = now;
+      } else {
+        // Missed days, reset streak
+        _careStreak = 1;
+        _lastStreakDate = now;
+      }
+    }
+
+    await save();
+    notifyListeners();
+  }
+
+  Future<void> resetCareStreak() async {
+    _careStreak = 0;
+    _lastStreakDate = null;
+    await save();
+    notifyListeners();
+  }
+
+  Future<void> incrementCareStreak() async {
+    _careStreak++;
+    _lastStreakDate = DateTime.now();
+
+    await save();
+    notifyListeners();
+  }
+
+  Future<void> useWater() async {
+    if (!_careResources.canUseWater()) {
+      return;
+    }
+    _careResources = _careResources.useWater();
+    await save();
+    notifyListeners();
+  }
+
+  Future<void> useFertilizer() async {
+    if (!_careResources.canUseFertilizer()) {
+      return;
+    }
+    _careResources = _careResources.useFertilizer();
+    await save();
+    notifyListeners();
+  }
+
+  void triggerResourceRegeneration() {
+    final before = _careResources;
+    _careResources = _careResources.regenerate();
+    if (before != _careResources) {
+      save();
+      notifyListeners();
+    }
   }
 }
