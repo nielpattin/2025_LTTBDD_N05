@@ -6,7 +6,7 @@ A creature collection and battle game where players grow, train, and battle plan
 - **Garden**: Plant and grow your Plantmon collection with interactive garden gameplay
 - **Battle System**: Turn-based combat with strategic party building
 - **Challenge Tower**: Progress through increasingly difficult floors to test your skills
-- **Shop**: Purchase seeds and items to expand your collection
+- **Shop**: Purchase Plant Ball to expand your collection
 - **Achievements**: Complete challenges and unlock rewards
 - **Collection**: Collect Plantmon of different rarities from common to legendary
 
@@ -15,7 +15,6 @@ A creature collection and battle game where players grow, train, and battle plan
 - Train and level up your creatures
 - Build strategic battle parties
 - Challenge the tower for rewards
-- Collect and trade with friends
 
 ## Project Info
 - **Student ID**: 23010070
