@@ -1,10 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/player_profile.dart';
 import '../game/garden_state.dart';
-import '../services/storage_service.dart';
 import '../widgets/notification_bar.dart' as notification;
 
 class SettingsScreen extends StatefulWidget {
@@ -230,15 +227,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: const Color(0xFF66BB6A),
               onPressed: () => _completeAllAchievements(context),
             ),
-            const SizedBox(height: 16),
-            const Divider(color: Color(0xFF2a2a2a), height: 1),
-            const SizedBox(height: 16),
-            _buildDevButton(
-              icon: Icons.delete_forever,
-              label: 'Clear All Data',
-              color: Colors.red,
-              onPressed: () => _clearAllData(context),
-            ),
           ],
         ),
       ),
@@ -403,70 +391,5 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context,
       'Complete achievements feature needs implementation',
     );
-  }
-
-  Future<void> _clearAllData(BuildContext context) async {
-    if (!mounted) return;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1e1e1e),
-          title: const Text(
-            'Clear All Data',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: const Text(
-            'This will delete ALL game data including:\n• Profile & Level\n• All Plantmon\n• Stars\n• Achievements\n• Tower Progress\n\nThis cannot be undone. Are you sure?',
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white60),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                elevation: 0,
-              ),
-              child: const Text('Delete Everything'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirm != true || !mounted) return;
-
-    final navigator = Navigator.of(context);
-
-    try {
-      final prefs = StorageService().prefs;
-
-      // Get all keys before clearing
-      final allKeys = await prefs.getKeys();
-
-      // Clear all keys manually
-      for (final key in allKeys) {
-        await prefs.remove(key);
-      }
-
-      if (!mounted) return;
-
-      notification.NotificationBar.success(
-        context,
-        'All data cleared! Please restart the app to begin fresh.',
-      );
-      navigator.pop();
-    } catch (e) {
-      if (!mounted) return;
-      notification.NotificationBar.error(context, 'Error clearing data: $e');
-    }
   }
 }
