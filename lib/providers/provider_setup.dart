@@ -5,12 +5,13 @@ import '../game/player_profile.dart';
 import '../game/garden_state.dart';
 import '../providers/rewards_state.dart';
 import '../theme/app_theme.dart';
-import '../screens/home_screen.dart';
 
 class ProviderSetup {
   static final PlayerProfile _playerProfileInstance = PlayerProfile();
   static final GardenState _gardenStateInstance = GardenState();
   static final RewardsState _rewardsStateInstance = RewardsState();
+
+  static PlayerProfile get playerProfile => _playerProfileInstance;
 
   static Future<void> initialize() async {
     await _playerProfileInstance.load();
@@ -18,7 +19,7 @@ class ProviderSetup {
     await _rewardsStateInstance.load();
   }
 
-  static Widget createApp() {
+  static Widget createApp({required Widget home}) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<PlayerProfile>.value(
@@ -33,7 +34,7 @@ class ProviderSetup {
       child: MaterialApp(
         title: 'Plantmon',
         theme: AppTheme.darkTheme,
-        home: const HomeScreen(),
+        home: home,
         debugShowCheckedModeBanner: false,
       ),
     );
