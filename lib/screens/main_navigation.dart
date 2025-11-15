@@ -39,18 +39,18 @@ class _MainNavigationState extends State<MainNavigation> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_currentIndex]),
-        backgroundColor: const Color(0xFF2d5016),
         automaticallyImplyLeading: false,
         actions: [
-          if (_currentIndex == 1)
+          if (_currentIndex == 0 || _currentIndex == 1)
             Consumer<PlayerProfile>(
               builder: (context, profile, _) => Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
-                    const Text(
-                      '⭐',
-                      style: TextStyle(fontSize: 18),
+                    const Icon(
+                      Icons.star,
+                      size: 26,
+                      color: Colors.amber,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -79,9 +79,10 @@ class _MainNavigationState extends State<MainNavigation> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Text(
-                      '⭐',
-                      style: TextStyle(fontSize: 16),
+                    const Icon(
+                      Icons.star,
+                      size: 16,
+                      color: Colors.amber,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -137,28 +138,30 @@ class _MainNavigationState extends State<MainNavigation> {
             _currentIndex = index;
           });
         },
-        backgroundColor: const Color(0xFF1a2e0f),
         selectedItemColor: Colors.green,
         unselectedItemColor: Colors.white54,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home, size: 28), label: ''),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home, size: 28),
+            label: 'Garden',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart, size: 28),
-            label: '',
+            label: 'Shop',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.castle, size: 28),
-            label: '',
+            label: 'Tower',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.emoji_events, size: 28),
-            label: '',
+            label: 'Awards',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person, size: 28),
-            label: '',
+            label: 'Profile',
           ),
         ],
         type: BottomNavigationBarType.fixed,
