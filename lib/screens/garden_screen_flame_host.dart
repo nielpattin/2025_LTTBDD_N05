@@ -2,7 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/garden_game.dart';
-import '../game/garden_state.dart';
+import '../game/player_profile.dart';
 import '../models/slot.dart';
 import 'plant_view_screen.dart';
 
@@ -19,8 +19,8 @@ class _GardenFlameHostState extends State<GardenFlameHost> {
   @override
   void initState() {
     super.initState();
-    final gardenState = context.read<GardenState>();
-    _initializeGame(gardenState.getUnlockedSlots());
+    final profile = context.read<PlayerProfile>();
+    _initializeGame(profile.getUnlockedSlots());
   }
 
   void _initializeGame(List<Slot> slots) {
@@ -47,9 +47,9 @@ class _GardenFlameHostState extends State<GardenFlameHost> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<GardenState>(
-      builder: (context, gardenState, _) {
-        final currentSlots = gardenState.getUnlockedSlots();
+    return Consumer<PlayerProfile>(
+      builder: (context, profile, _) {
+        final currentSlots = profile.getUnlockedSlots();
 
         game.updateSlots(currentSlots);
 

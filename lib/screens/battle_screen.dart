@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/battle_state.dart';
 import '../game/player_profile.dart';
-import '../game/garden_state.dart';
 import '../models/battle_party.dart';
 import '../models/timeline_entity.dart';
 import '../widgets/timeline_bar_widget.dart';
@@ -489,7 +488,6 @@ class _BattleScreenState extends State<BattleScreen>
     result,
   ) async {
     final profile = context.read<PlayerProfile>();
-    final gardenState = context.read<GardenState>();
 
     // Only give rewards if NOT practice mode
     if (!widget.isPracticeMode) {
@@ -502,18 +500,19 @@ class _BattleScreenState extends State<BattleScreen>
       }
 
       // Update all party members with exp
-      if (widget.party != null) {
+        if (widget.party != null) {
         for (final slotIndex in widget.party!.plantmonSlotIndices) {
-          final player = gardenState.getPlantmon(slotIndex);
+          final player = profile.getPlantmon(slotIndex);
           if (player != null) {
             final updatedPlayer = player.addExp(result.expGained);
-            await gardenState.updatePlantmon(slotIndex, updatedPlayer);
+            await profile.updatePlantmonInSlot(slotIndex, updatedPlayer);
           }
         }
       }
 
-      await profile.updatePlantmonCount(gardenState.getTotalPlantmons());
-      await gardenState.unlockSlotsForLevel(profile.level);
+      await profile.updatePlantmonCount(profile.getTotalPlantmons());
+      await profile.unlockSlotsForLevel(profile.level);
+
     }
 
     if (context.mounted) {

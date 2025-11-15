@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/player_profile.dart';
-import '../game/garden_state.dart';
 import '../data/shop_data.dart';
 import '../data/plants_data.dart';
 import '../data/ball_tiers.dart';
@@ -13,10 +12,11 @@ import '../widgets/notification_bar.dart' as notification;
 class ShopScreen extends StatelessWidget {
   const ShopScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Consumer2<PlayerProfile, GardenState>(
-      builder: (context, profile, gardenState, _) {
+   @override
+   Widget build(BuildContext context) {
+     return Consumer<PlayerProfile>(
+       builder: (context, profile, _) {
+
         final List<Widget> items = [];
 
         for (final item in shopInventory) {
@@ -212,7 +212,6 @@ class ShopScreen extends StatelessWidget {
 
   void _handlePurchase(BuildContext context, item) {
     final profile = context.read<PlayerProfile>();
-    final gardenState = context.read<GardenState>();
 
     final starCost = item.starCost ?? 0;
 
@@ -233,7 +232,7 @@ class ShopScreen extends StatelessWidget {
       return;
     }
 
-    if (!gardenState.hasEmptySlot()) {
+    if (!profile.hasEmptySlot()) {
       notification.NotificationBar.error(
         context,
         'No slots! Level up for more space',
@@ -574,9 +573,10 @@ class ShopScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _selectPlantmon(BuildContext context, Plantmon plantmon) async {
-    final gardenState = context.read<GardenState>();
-    final emptySlots = gardenState.getEmptySlots();
+   Future<void> _selectPlantmon(BuildContext context, Plantmon plantmon) async {
+     final profile = context.read<PlayerProfile>();
+     final emptySlots = profile.getEmptySlots();
+
 
     if (emptySlots.isEmpty) {
       if (context.mounted) {
@@ -589,14 +589,14 @@ class ShopScreen extends StatelessWidget {
     }
 
     try {
-      await gardenState.plantInSlot(emptySlots.first.index, plantmon);
+       await profile.plantInSlot(emptySlots.first.index, plantmon);
+ 
+       if (!context.mounted) {
+         return;
+       }
+ 
+       await profile.updatePlantmonCount(profile.getTotalPlantmons());
 
-      if (!context.mounted) {
-        return;
-      }
-
-      final profile = context.read<PlayerProfile>();
-      await profile.updatePlantmonCount(gardenState.getTotalPlantmons());
     } catch (e) {
       if (context.mounted) {
         notification.NotificationBar.error(context, 'Purchase error: $e');

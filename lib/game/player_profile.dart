@@ -5,9 +5,13 @@ import '../services/storage_service.dart';
 import '../models/achievement.dart';
 import '../models/care_resources.dart';
 import '../config/game_balance.dart';
-
+import '../models/slot.dart';
+import '../models/plantmon.dart';
+ 
 class PlayerProfile extends ChangeNotifier {
   late final SharedPreferencesAsync _prefs = StorageService().prefs;
+
+  // Core profile fields
   int _stars = 0;
   bool _isFirstTime = true;
   int _level = 1;
@@ -20,6 +24,12 @@ class PlayerProfile extends ChangeNotifier {
   int _careStreak = 0;
   DateTime? _lastStreakDate;
   CareResources _careResources = CareResources();
+
+  List<Slot> _slots = [];
+  final int maxSlots = 12;
+
+  List<Slot> get slots => List.unmodifiable(_slots);
+
 
   int get stars => _stars;
   bool get isFirstTime => _isFirstTime;
@@ -38,6 +48,193 @@ class PlayerProfile extends ChangeNotifier {
 
   double get expProgress => exp / expToNextLevel;
 
+  // Garden helpers
+  List<Slot> getUnlockedSlots() {
+    return _slots.where((slot) => slot.isUnlocked).toList();
+  }
+
+  List<Slot> getEmptySlots() {
+    return _slots.where((slot) => slot.isUnlocked && slot.isEmpty).toList();
+  }
+
+  bool hasEmptySlot() {
+    return _slots.any((slot) => slot.isUnlocked && slot.isEmpty);
+  }
+
+  int getTotalPlantmons() {
+    return _slots.where((slot) => slot.plantmon != null).length;
+  }
+
+  Slot? getNextLockedSlot() {
+    try {
+      return _slots.firstWhere((slot) => !slot.isUnlocked);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> plantInSlot(int slotIndex, Plantmon plantmon) async {
+    if (slotIndex >= 0 && slotIndex < _slots.length) {
+      final slot = _slots[slotIndex];
+      if (slot.isUnlocked && slot.isEmpty) {
+        _slots[slotIndex] = slot.plant(plantmon);
+        await _saveGarden();
+        await updatePlantmonCount(getTotalPlantmons());
+        notifyListeners();
+      }
+    }
+  }
+
+  Plantmon? getPlantmon(int slotIndex) {
+    if (slotIndex >= 0 && slotIndex < _slots.length) {
+      return _slots[slotIndex].plantmon;
+    }
+    return null;
+  }
+
+  Future<void> updatePlantmonInSlot(int slotIndex, Plantmon plantmon) async {
+    if (slotIndex >= 0 && slotIndex < _slots.length) {
+      final slot = _slots[slotIndex];
+      if (!slot.isEmpty) {
+        _slots[slotIndex] = slot.plant(plantmon);
+        await _saveGarden();
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> harvestPlantmon(int slotIndex) async {
+    if (slotIndex >= 0 && slotIndex < _slots.length) {
+      _slots[slotIndex] = _slots[slotIndex].harvest();
+      await _saveGarden();
+      await updatePlantmonCount(getTotalPlantmons());
+      notifyListeners();
+    }
+  }
+
+  bool canUnlockSlotWithCoins(int slotIndex) {
+    if (slotIndex >= _slots.length) {
+      return false;
+    }
+    final slot = _slots[slotIndex];
+    return !slot.isUnlocked;
+  }
+
+  Future<void> unlockSlotWithCoins(int slotIndex) async {
+    if (slotIndex >= 0 && slotIndex < _slots.length) {
+      _slots[slotIndex] = _slots[slotIndex].unlock();
+      await _saveGarden();
+      notifyListeners();
+    }
+  }
+
+  Future<void> unlockSlotsForLevel(int playerLevel) async {
+    bool changed = false;
+    for (int i = 0; i < maxSlots; i++) {
+      if (i >= _slots.length) {
+        _slots.add(
+          Slot(
+            id: 'slot_$i',
+            index: i,
+            isUnlocked: false,
+            unlockLevel: getSlotUnlockLevel(i),
+          ),
+        );
+        changed = true;
+      }
+
+      if (!_slots[i].isUnlocked && playerLevel >= _slots[i].unlockLevel) {
+        _slots[i] = _slots[i].unlock();
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      await _saveGarden();
+      notifyListeners();
+    }
+  }
+
+  Future<void> _loadGarden() async {
+    _slots.clear();
+
+    try {
+      final slotsJson = await _prefs.getString('garden_slots');
+
+      if (slotsJson != null) {
+        final List<dynamic> decoded = jsonDecode(slotsJson);
+        _slots = decoded.map((json) {
+          return Slot.fromJson(json as Map<String, dynamic>);
+        }).toList();
+      } else {
+        final oldPotsJson = await _prefs.getString('garden_pots');
+        if (oldPotsJson != null) {
+          await _migrateGardenFromPots(oldPotsJson);
+        } else {
+          _initializeDefaultSlot();
+        }
+      }
+
+      _ensureAllSlotsExist();
+    } catch (e) {
+      _initializeDefaultSlot();
+    }
+  }
+
+  Future<void> _migrateGardenFromPots(String potsJson) async {
+    try {
+      final List<dynamic> decoded = jsonDecode(potsJson);
+      _slots = decoded.map((json) {
+        final slotIndex = json['slotIndex'] as int;
+        return Slot(
+          id: 'slot_$slotIndex',
+          index: slotIndex,
+          isUnlocked: json['isUnlocked'] as bool,
+          unlockLevel: getSlotUnlockLevel(slotIndex),
+          plantmon: json['plantmon'] != null
+              ? Plantmon.fromJson(json['plantmon'] as Map<String, dynamic>)
+              : null,
+        );
+      }).toList();
+
+      await _saveGarden();
+    } catch (e) {
+      _initializeDefaultSlot();
+    }
+  }
+
+  Future<void> _saveGarden() async {
+    try {
+      final slotsJson = jsonEncode(_slots.map((s) => s.toJson()).toList());
+      await _prefs.setString('garden_slots', slotsJson);
+    } catch (e) {
+      // ignore save errors for garden
+    }
+  }
+
+  void _initializeDefaultSlot() {
+    if (_slots.isEmpty) {
+      _slots.add(
+        Slot(id: 'slot_0', index: 0, isUnlocked: true, unlockLevel: 1),
+      );
+    }
+  }
+
+  void _ensureAllSlotsExist() {
+    for (int i = 0; i < maxSlots; i++) {
+      if (i >= _slots.length) {
+        _slots.add(
+          Slot(
+            id: 'slot_$i',
+            index: i,
+            isUnlocked: false,
+            unlockLevel: getSlotUnlockLevel(i),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> load() async {
     _stars = await _prefs.getInt('stars') ?? 0;
     _isFirstTime = await _prefs.getBool('isFirstTime') ?? true;
@@ -47,6 +244,10 @@ class PlayerProfile extends ChangeNotifier {
     _totalPlantmons = await _prefs.getInt('totalPlantmons') ?? 0;
     _evolutionCount = await _prefs.getInt('evolutionCount') ?? 0;
     _towerFloor = await _prefs.getInt('towerFloor') ?? 1;
+
+    // Load garden slots
+    await _loadGarden();
+
 
     // Load care streak system
     _careStreak = await _prefs.getInt('careStreak') ?? 0;
@@ -84,6 +285,9 @@ class PlayerProfile extends ChangeNotifier {
     await _prefs.setInt('totalPlantmons', _totalPlantmons);
     await _prefs.setInt('evolutionCount', _evolutionCount);
     await _prefs.setInt('towerFloor', _towerFloor);
+
+    // Persist garden slots
+    await _saveGarden();
 
     // Save care streak system
     await _prefs.setInt('careStreak', _careStreak);

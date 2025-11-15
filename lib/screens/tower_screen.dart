@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/player_profile.dart';
-import '../game/garden_state.dart';
 import '../config/game_balance.dart';
 import 'battle_preparation_screen.dart';
 
@@ -35,9 +34,9 @@ class _TowerScreenState extends State<TowerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<PlayerProfile, GardenState>(
-      builder: (context, profile, gardenState, _) {
-        final hasPlantmons = gardenState.getTotalPlantmons() > 0;
+    return Consumer<PlayerProfile>(
+      builder: (context, profile, _) {
+        final hasPlantmons = profile.getTotalPlantmons() > 0;
         final currentFloor = profile.towerFloor;
 
         if (!hasPlantmons) {

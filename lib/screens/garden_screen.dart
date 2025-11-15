@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../game/garden_state.dart';
 import '../game/player_profile.dart';
 import '../models/care_resources.dart';
 import 'garden_screen_flame_host.dart';
@@ -20,9 +19,9 @@ class GardenScreen extends StatelessWidget {
               colors: [Color(0xFF0f1a0f), Color(0xFF132312)],
             ),
           ),
-          child: Consumer<GardenState>(
-            builder: (context, gardenState, child) {
-              final slots = gardenState.slots;
+          child: Consumer<PlayerProfile>(
+            builder: (context, profile, child) {
+              final slots = profile.slots;
 
               if (slots.isEmpty) {
                 return const Center(

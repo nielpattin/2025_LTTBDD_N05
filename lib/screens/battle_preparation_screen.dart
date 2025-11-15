@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/battle_party.dart';
 import '../models/plantmon.dart';
-import '../game/garden_state.dart';
 import '../game/player_profile.dart';
 import '../game/battle_state.dart';
 import '../config/game_balance.dart';
@@ -34,8 +33,8 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
         backgroundColor: const Color(0xFF1a1a1a),
       ),
       backgroundColor: const Color(0xFF0a0a0a),
-      body: Consumer2<GardenState, PlayerProfile>(
-        builder: (context, gardenState, profile, _) {
+      body: Consumer<PlayerProfile>(
+        builder: (context, profile, _) {
           return Column(
             children: [
               Expanded(
@@ -46,11 +45,13 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
                     const SizedBox(height: 12),
                     _buildRewardPreview(),
                     const SizedBox(height: 16),
-                    _buildPartySelection(gardenState),
+                     _buildPartySelection(profile),
+
                   ],
                 ),
               ),
-              _buildStartButton(gardenState),
+               _buildStartButton(profile),
+
             ],
           );
         },
@@ -157,10 +158,10 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
     );
   }
 
-  Widget _buildPartySelection(GardenState gardenState) {
+  Widget _buildPartySelection(PlayerProfile profile) {
     final plantedSlots = <int>[];
-    for (int i = 0; i < gardenState.slots.length; i++) {
-      if (gardenState.getPlantmon(i) != null) {
+    for (int i = 0; i < profile.slots.length; i++) {
+      if (profile.getPlantmon(i) != null) {
         plantedSlots.add(i);
       }
     }
@@ -180,7 +181,8 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
         ),
         const SizedBox(height: 12),
         ...plantedSlots.map((slotIndex) {
-          final plantmon = gardenState.getPlantmon(slotIndex)!;
+           final plantmon = profile.getPlantmon(slotIndex)!;
+
           final isSelected = _selectedSlotIndices.contains(slotIndex);
           return _buildPlantmonCard(plantmon, slotIndex, isSelected);
         }),
@@ -285,7 +287,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
     );
   }
 
-  Widget _buildStartButton(GardenState gardenState) {
+  Widget _buildStartButton(PlayerProfile profile) {
     final canStart = _selectedSlotIndices.isNotEmpty;
     final maxPartySize = GameBalance.getMaxPlayerPartySize(widget.floor);
 
@@ -300,7 +302,8 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
           width: double.infinity,
           height: 54,
           child: ElevatedButton(
-            onPressed: canStart ? () => _startBattle(gardenState) : null,
+             onPressed: canStart ? () => _startBattle(profile) : null,
+
             style: ElevatedButton.styleFrom(
               backgroundColor: canStart
                   ? const Color(0xFF66BB6A)
@@ -357,14 +360,15 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
     return (expMin, expMax, starsEarned);
   }
 
-  void _startBattle(GardenState gardenState) {
+   void _startBattle(PlayerProfile profile) {
+
     final party = BattleParty(
       plantmonSlotIndices: List.from(_selectedSlotIndices),
     );
 
     final battleState = BattleState();
     final plantmons = _selectedSlotIndices
-        .map((i) => gardenState.getPlantmon(i)!)
+        .map((i) => profile.getPlantmon(i)!)
         .toList();
 
     battleState.startBattleForTower(plantmons, widget.floor);

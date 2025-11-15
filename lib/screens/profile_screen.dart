@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/player_profile.dart';
-import '../game/garden_state.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,35 +15,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     // Unlock slots after first frame is built
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
         return;
       }
       final profile = context.read<PlayerProfile>();
-      final gardenState = context.read<GardenState>();
-      await gardenState.unlockSlotsForLevel(profile.level);
+      await profile.unlockSlotsForLevel(profile.level);
     });
+
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<PlayerProfile, GardenState>(
-      builder: (context, profile, gardenState, _) {
-        final nextSlot = gardenState.getNextLockedSlot();
+    return Consumer<PlayerProfile>(
+      builder: (context, profile, _) {
+        final nextSlot = profile.getNextLockedSlot();
 
         return Container(
           color: const Color(0xFF0a0a0a),
           child: ListView(
             padding: const EdgeInsets.all(16),
-            children: [
-              _buildPlayerCard(profile, gardenState),
+             children: [
+              _buildPlayerCard(profile),
               const SizedBox(height: 16),
                     _buildSlotsCard(
                       profile,
-                      gardenState,
                       nextSlot,
                       context,
                     ),
+
             ],
           ),
         );
@@ -52,7 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPlayerCard(PlayerProfile profile, GardenState gardenState) {
+  Widget _buildPlayerCard(PlayerProfile profile) {
     return Card(
       elevation: 0,
       color: const Color(0xFF1e1e1e),
@@ -175,13 +174,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildSlotsCard(
-    PlayerProfile profile,
-    GardenState gardenState,
-    nextSlot,
-    BuildContext context,
-  ) {
-    final unlockedCount = gardenState.getUnlockedSlots().length;
-    final totalPlantmons = gardenState.getTotalPlantmons();
+     PlayerProfile profile,
+     nextSlot,
+     BuildContext context,
+   ) {
+     final unlockedCount = profile.getUnlockedSlots().length;
+     final totalPlantmons = profile.getTotalPlantmons();
+
 
     return Card(
       elevation: 0,
@@ -211,8 +210,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatItem(
-                  'Unlocked',
-                  '$unlockedCount / ${gardenState.maxSlots}',
+                   'Unlocked',
+                   '$unlockedCount / ${profile.maxSlots}',
+
                   Icons.lock_open,
                 ),
                 _buildStatItem('Growing', '$totalPlantmons', Icons.eco),

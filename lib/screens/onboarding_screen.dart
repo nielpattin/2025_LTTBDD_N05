@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/player_profile.dart';
-import '../game/garden_state.dart';
 import '../data/ball_tiers.dart';
 import '../data/plants_data.dart';
 import '../models/plantmon.dart';
@@ -65,12 +64,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     final profile = context.read<PlayerProfile>();
-    final gardenState = context.read<GardenState>();
 
     await profile.completeOnboarding();
 
-    await gardenState.plantInSlot(0, _selectedStarter!);
-    await profile.updatePlantmonCount(gardenState.getTotalPlantmons());
+    await profile.plantInSlot(0, _selectedStarter!);
 
     if (mounted) {
       Navigator.of(context).pushReplacement(

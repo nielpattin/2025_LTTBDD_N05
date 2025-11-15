@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/player_profile.dart';
-import '../game/garden_state.dart';
 import '../models/plantmon.dart';
 import '../models/care_resources.dart';
 import '../services/care_service.dart';
@@ -31,9 +30,9 @@ class PlantViewScreen extends StatelessWidget {
       ),
       body: Container(
         color: const Color(0xFF0a0a0a),
-        child: Consumer<GardenState>(
-          builder: (context, gardenState, _) {
-            final plantmon = gardenState.getPlantmon(slotIndex);
+        child: Consumer<PlayerProfile>(
+          builder: (context, profile, _) {
+            final plantmon = profile.getPlantmon(slotIndex);
 
             if (plantmon == null) {
               return const Center(
@@ -419,83 +418,82 @@ class PlantViewScreen extends StatelessWidget {
     BuildContext context,
     Plantmon plantmon,
   ) async {
-    final gardenState = context.read<GardenState>();
     final profile = context.read<PlayerProfile>();
     final rewards = context.read<RewardsState>();
-
+ 
     final updatedPlantmon = await CareService.performWater(profile, plantmon);
-
+ 
     if (CareService.shouldDropRareItem(updatedPlantmon)) {
       await rewards.addRareItemDrop();
       if (context.mounted) {
         notification.NotificationBar.success(
           context,
-          '🎁 Rare item dropped during care!',
+          '\ud83c\udf81 Rare item dropped during care!',
           duration: const Duration(seconds: 3),
         );
       }
     }
-
+ 
     await profile.updateCareStreak();
-
+ 
     if (updatedPlantmon.level > plantmon.level) {
       if (context.mounted) {
         _showLevelUpDialog(context, updatedPlantmon);
       }
     }
-
-    await gardenState.updatePlantmon(slotIndex, updatedPlantmon);
-
+ 
+    await profile.updatePlantmonInSlot(slotIndex, updatedPlantmon);
+ 
     if (context.mounted) {
       notification.NotificationBar.success(
         context,
-        '💧 Watered! ${plantmon.name} gained +10 EXP',
+        '\ud83d\udca7 Watered! ${plantmon.name} gained +10 EXP',
         duration: const Duration(seconds: 2),
       );
     }
   }
-
+ 
   Future<void> _handleFertilizerAction(
     BuildContext context,
     Plantmon plantmon,
   ) async {
-    final gardenState = context.read<GardenState>();
     final profile = context.read<PlayerProfile>();
     final rewards = context.read<RewardsState>();
-
+ 
     final updatedPlantmon = await CareService.performFertilize(profile, plantmon);
-
+ 
     if (CareService.shouldDropRareItem(updatedPlantmon)) {
       await rewards.addRareItemDrop();
       if (context.mounted) {
         notification.NotificationBar.success(
           context,
-          '🎁 Rare item dropped during care!',
+          '\ud83c\udf81 Rare item dropped during care!',
           duration: const Duration(seconds: 3),
         );
       }
     }
-
+ 
     await profile.updateCareStreak();
-
+ 
     if (updatedPlantmon.level > plantmon.level) {
       if (context.mounted) {
         _showLevelUpDialog(context, updatedPlantmon);
       }
     }
-
-    await gardenState.updatePlantmon(slotIndex, updatedPlantmon);
-
+ 
+    await profile.updatePlantmonInSlot(slotIndex, updatedPlantmon);
+ 
     if (context.mounted) {
       notification.NotificationBar.success(
         context,
-        '🌱 Fertilized! ${plantmon.name} gained +10 EXP',
+        '\ud83c\udf31 Fertilized! ${plantmon.name} gained +10 EXP',
         duration: const Duration(seconds: 2),
       );
     }
   }
-
+ 
   void _showLevelUpDialog(BuildContext context, Plantmon plantmon) {
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

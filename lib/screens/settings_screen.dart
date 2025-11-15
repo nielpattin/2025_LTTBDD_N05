@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/player_profile.dart';
-import '../game/garden_state.dart';
 import '../widgets/notification_bar.dart' as notification;
 
 class SettingsScreen extends StatefulWidget {
@@ -284,8 +283,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
 
     try {
-      final gardenState = context.read<GardenState>();
-      final nextSlot = gardenState.getNextLockedSlot();
+      final profile = context.read<PlayerProfile>();
+      final nextSlot = profile.getNextLockedSlot();
 
       if (nextSlot == null) {
         if (!mounted) return;
@@ -296,7 +295,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
 
-      await gardenState.unlockSlotWithCoins(nextSlot.index);
+       await profile.unlockSlotWithCoins(nextSlot.index);
+
       if (!mounted) return;
 
       notification.NotificationBar.success(
@@ -367,10 +367,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     try {
       final profile = context.read<PlayerProfile>();
-      final gardenState = context.read<GardenState>();
 
       await profile.addExp(profile.expToNextLevel);
-      await gardenState.unlockSlotsForLevel(profile.level);
+      await profile.unlockSlotsForLevel(profile.level);
 
       if (!mounted) return;
 
