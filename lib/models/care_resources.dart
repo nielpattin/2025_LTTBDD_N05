@@ -84,8 +84,9 @@ class CareResources {
   }
 
   Duration? getWaterRegenTimeRemaining() {
-    if (waterCharges >= GameBalance.maxWaterCharges || lastWaterRegen == null)
+    if (waterCharges >= GameBalance.maxWaterCharges || lastWaterRegen == null) {
       return null;
+    }
     final nextRegen = lastWaterRegen!.add(
       Duration(hours: GameBalance.chargeRegenHours),
     );
@@ -95,8 +96,9 @@ class CareResources {
 
   Duration? getFertilizerRegenTimeRemaining() {
     if (fertilizerCharges >= GameBalance.maxFertilizerCharges ||
-        lastFertilizerRegen == null)
+        lastFertilizerRegen == null) {
       return null;
+    }
     final nextRegen = lastFertilizerRegen!.add(
       Duration(hours: GameBalance.chargeRegenHours),
     );

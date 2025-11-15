@@ -1,4 +1,4 @@
-package com.example.shipper_sim
+package com.example.plantmon
 
 import io.flutter.embedding.android.FlutterActivity
 
