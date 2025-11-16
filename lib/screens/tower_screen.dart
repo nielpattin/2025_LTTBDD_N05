@@ -46,10 +46,10 @@ class _TowerScreenState extends State<TowerScreen> {
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search_off, size: 80, color: Colors.white38),
+                  Icon(Icons.store, size: 80, color: Colors.white38),
                   SizedBox(height: 24),
                   Text(
-                    'No Plantmon Yet!',
+                    'Chưa có Plantmon nào!',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -58,7 +58,7 @@ class _TowerScreenState extends State<TowerScreen> {
                   ),
                   SizedBox(height: 12),
                   Text(
-                    'Grow plants in the Garden first',
+                    'Đến cửa hàng và thu thập Plantmon để bắt đầu chinh phục Tower!',
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                     textAlign: TextAlign.center,
                   ),

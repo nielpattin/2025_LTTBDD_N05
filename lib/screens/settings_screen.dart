@@ -182,49 +182,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.star,
               label: 'Add 100 Stars',
               color: const Color(0xFF9C27B0),
-              onPressed: () => _addStars(context),
+              onPressed: _addStars,
             ),
             const SizedBox(height: 8),
             _buildDevButton(
               icon: Icons.lock_open,
               label: 'Unlock +1 Slot',
               color: const Color(0xFF66BB6A),
-              onPressed: () => _unlockNextSlot(context),
+              onPressed: _unlockNextSlot,
             ),
             const SizedBox(height: 8),
             _buildDevButton(
               icon: Icons.castle,
               label: 'Unlock All Floors',
               color: const Color(0xFF66BB6A),
-              onPressed: () => _unlockAllFloors(context),
+              onPressed: _unlockAllFloors,
             ),
             const SizedBox(height: 8),
             _buildDevButton(
               icon: Icons.add,
               label: '+1 Care Streak',
               color: const Color(0xFF29B6F6),
-              onPressed: () => _incrementCareStreak(context),
+              onPressed: _incrementCareStreak,
             ),
             const SizedBox(height: 8),
             _buildDevButton(
               icon: Icons.restore,
               label: 'Reset Care Streak',
               color: Colors.orange,
-              onPressed: () => _resetCareStreak(context),
+              onPressed: _resetCareStreak,
             ),
             const SizedBox(height: 8),
             _buildDevButton(
               icon: Icons.arrow_upward,
               label: 'Level Up Player',
               color: const Color(0xFF66BB6A),
-              onPressed: () => _levelUpPlayer(context),
+              onPressed: _levelUpPlayer,
             ),
             const SizedBox(height: 8),
             _buildDevButton(
               icon: Icons.emoji_events,
               label: 'Complete All Achievements',
               color: const Color(0xFF66BB6A),
-              onPressed: () => _completeAllAchievements(context),
+              onPressed: _completeAllAchievements,
             ),
           ],
         ),
@@ -264,7 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _addStars(BuildContext context) async {
+  Future<void> _addStars() async {
     if (!mounted) return;
 
     try {
@@ -279,7 +279,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _unlockNextSlot(BuildContext context) async {
+  Future<void> _unlockNextSlot() async {
     if (!mounted) return;
 
     try {
@@ -295,7 +295,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
 
-       await profile.unlockSlotWithCoins(nextSlot.index);
+      await profile.unlockSlotWithCoins(nextSlot.index);
 
       if (!mounted) return;
 
@@ -309,7 +309,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _unlockAllFloors(BuildContext context) async {
+  Future<void> _unlockAllFloors() async {
     if (!mounted) return;
 
     try {
@@ -329,7 +329,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _incrementCareStreak(BuildContext context) async {
+  Future<void> _incrementCareStreak() async {
     if (!mounted) return;
 
     try {
@@ -347,7 +347,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _resetCareStreak(BuildContext context) async {
+  Future<void> _resetCareStreak() async {
     if (!mounted) return;
 
     try {
@@ -362,7 +362,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _levelUpPlayer(BuildContext context) async {
+  Future<void> _levelUpPlayer() async {
     if (!mounted) return;
 
     try {
@@ -383,7 +383,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _completeAllAchievements(BuildContext context) async {
+  Future<void> _completeAllAchievements() async {
     if (!mounted) return;
 
     notification.NotificationBar.info(

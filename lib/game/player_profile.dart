@@ -16,13 +16,9 @@ class PlayerProfile extends ChangeNotifier {
   bool _isFirstTime = true;
   int _level = 1;
   int _exp = 0;
-  int _battleWins = 0;
-  int _totalPlantmons = 0;
-  int _evolutionCount = 0;
   int _towerFloor = 1;
   List<Achievement> _achievements = [];
   int _careStreak = 0;
-  DateTime? _lastStreakDate;
   CareResources _careResources = CareResources();
 
   List<Slot> _slots = [];
@@ -35,13 +31,9 @@ class PlayerProfile extends ChangeNotifier {
   bool get isFirstTime => _isFirstTime;
   int get level => _level;
   int get exp => _exp;
-  int get battleWins => _battleWins;
-  int get totalPlantmons => _totalPlantmons;
-  int get evolutionCount => _evolutionCount;
   int get towerFloor => _towerFloor;
   List<Achievement> get achievements => List.unmodifiable(_achievements);
   int get careStreak => _careStreak;
-  DateTime? get lastStreakDate => _lastStreakDate;
   CareResources get careResources => _careResources.regenerate();
 
   int get expToNextLevel => GameBalance.getPlayerExpRequirement(_level);
@@ -240,9 +232,6 @@ class PlayerProfile extends ChangeNotifier {
     _isFirstTime = await _prefs.getBool('isFirstTime') ?? true;
     _level = await _prefs.getInt('level') ?? 1;
     _exp = await _prefs.getInt('exp') ?? 0;
-    _battleWins = await _prefs.getInt('battleWins') ?? 0;
-    _totalPlantmons = await _prefs.getInt('totalPlantmons') ?? 0;
-    _evolutionCount = await _prefs.getInt('evolutionCount') ?? 0;
     _towerFloor = await _prefs.getInt('towerFloor') ?? 1;
 
     // Load garden slots
@@ -251,10 +240,6 @@ class PlayerProfile extends ChangeNotifier {
 
     // Load care streak system
     _careStreak = await _prefs.getInt('careStreak') ?? 0;
-    final lastStreakDateStr = await _prefs.getString('lastStreakDate');
-    _lastStreakDate = lastStreakDateStr != null
-        ? DateTime.parse(lastStreakDateStr)
-        : null;
 
     final achievementsJson = await _prefs.getString('achievements');
     if (achievementsJson != null) {
@@ -281,9 +266,6 @@ class PlayerProfile extends ChangeNotifier {
     await _prefs.setBool('isFirstTime', _isFirstTime);
     await _prefs.setInt('level', _level);
     await _prefs.setInt('exp', _exp);
-    await _prefs.setInt('battleWins', _battleWins);
-    await _prefs.setInt('totalPlantmons', _totalPlantmons);
-    await _prefs.setInt('evolutionCount', _evolutionCount);
     await _prefs.setInt('towerFloor', _towerFloor);
 
     // Persist garden slots
@@ -291,14 +273,6 @@ class PlayerProfile extends ChangeNotifier {
 
     // Save care streak system
     await _prefs.setInt('careStreak', _careStreak);
-    if (_lastStreakDate != null) {
-      await _prefs.setString(
-        'lastStreakDate',
-        _lastStreakDate!.toIso8601String(),
-      );
-    } else {
-      await _prefs.remove('lastStreakDate');
-    }
 
     final achievementsJson = jsonEncode(
       _achievements.map((a) => a.toJson()).toList(),
@@ -344,17 +318,8 @@ class PlayerProfile extends ChangeNotifier {
     }
   }
 
-  Future<void> addBattleWin() async {
-    _battleWins++;
-    _updateAchievement('battle_ready', _battleWins);
-    _updateAchievement('warrior', _battleWins);
-    _updateAchievement('champion', _battleWins);
-    await save();
-    notifyListeners();
-  }
-
   Future<void> updatePlantmonCount(int count) async {
-    _totalPlantmons = count;
+
     _updateAchievement('first_plantmon', count);
     _updateAchievement('collector_i', count);
     _updateAchievement('collector_ii', count);
@@ -363,14 +328,8 @@ class PlayerProfile extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addEvolution() async {
-    _evolutionCount++;
-    _updateAchievement('evolver', _evolutionCount);
-    await save();
-    notifyListeners();
-  }
-
   void _updateAchievement(String id, int progress) {
+
     final index = _achievements.indexWhere((a) => a.id == id);
     if (index >= 0) {
       _achievements[index] = _achievements[index].copyWith(progress: progress);
@@ -397,12 +356,8 @@ class PlayerProfile extends ChangeNotifier {
     _isFirstTime = true;
     _level = 1;
     _exp = 0;
-    _battleWins = 0;
-    _totalPlantmons = 0;
-    _evolutionCount = 0;
     _towerFloor = 1;
     _careStreak = 0;
-    _lastStreakDate = null;
     _achievements = List.from(defaultAchievements);
     _careResources = CareResources();
     await save();
@@ -410,46 +365,23 @@ class PlayerProfile extends ChangeNotifier {
   }
 
   Future<void> updateCareStreak() async {
-    final now = DateTime.now();
-
-    // If last streak date is null or was yesterday, update streak
-    if (_lastStreakDate == null) {
-      _careStreak = 1;
-      _lastStreakDate = now;
-    } else {
-      final daysSinceLastStreak = now.difference(_lastStreakDate!).inDays;
-
-      if (daysSinceLastStreak == 0) {
-        // Already cared today, no change
-      } else if (daysSinceLastStreak == 1) {
-        // Cared yesterday, continue streak
-        _careStreak++;
-        _lastStreakDate = now;
-      } else {
-        // Missed days, reset streak
-        _careStreak = 1;
-        _lastStreakDate = now;
-      }
-    }
-
+    _careStreak++;
     await save();
     notifyListeners();
   }
-
+ 
   Future<void> resetCareStreak() async {
     _careStreak = 0;
-    _lastStreakDate = null;
     await save();
     notifyListeners();
   }
-
+ 
   Future<void> incrementCareStreak() async {
     _careStreak++;
-    _lastStreakDate = DateTime.now();
-
     await save();
     notifyListeners();
   }
+
 
   Future<void> useWater() async {
     if (!_careResources.canUseWater()) {

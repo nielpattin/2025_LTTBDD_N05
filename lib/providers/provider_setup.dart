@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../game/game_state.dart';
 import '../game/player_profile.dart';
 import '../providers/rewards_state.dart';
 import '../theme/app_theme.dart';
@@ -26,7 +25,6 @@ class ProviderSetup {
         ChangeNotifierProvider<RewardsState>.value(
           value: _rewardsStateInstance,
         ),
-        ChangeNotifierProvider(create: (_) => GameState()),
       ],
 
       child: MaterialApp(

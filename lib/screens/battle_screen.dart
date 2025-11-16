@@ -495,7 +495,6 @@ class _BattleScreenState extends State<BattleScreen>
       await profile.addStars(result.starsEarned);
 
       if (result.isWin) {
-        await profile.addBattleWin();
         await profile.incrementTowerFloor();
       }
 
