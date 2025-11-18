@@ -23,13 +23,6 @@ class GameBalance {
   // BATTLE REWARDS
   // ==========================================
 
-  /// Star rewards per floor tier
-  static const int starsFloor1to10 = 5;
-  static const int starsFloor11to20 = 8;
-  static const int starsFloor21to50 = 15;
-  static const int starsFloor51Plus = 20;
-  static const int bossFloorBonusStars = 10; // Every 10th floor
-
   /// Battle rewards multiplier
   static const double rewardMultiplierPerFloor = 0.15;
   static const int baseExpReward = 50;
@@ -122,8 +115,8 @@ class GameBalance {
 
   /// Enemy generation rules
   static const int singleEnemyMaxFloor = 10;
-  static const int singlePlayerMaxFloor = 10;
-  
+  static const int singlePartyMemberMaxFloor = 10;
+
   /// Enemy stat multiplier for tower battles
   static const double enemyStatMultiplier = 1.2;
 
@@ -156,23 +149,24 @@ class GameBalance {
 
   /// Get star reward for a specific floor
   static int getStarRewardForFloor(int floor) {
-    int baseStars;
-    if (floor >= 51) {
-      baseStars = starsFloor51Plus;
-    } else if (floor >= 21) {
-      baseStars = starsFloor21to50;
-    } else if (floor >= 11) {
-      baseStars = starsFloor11to20;
-    } else {
-      baseStars = starsFloor1to10;
+    final int base = (10 + floor ~/ 3).clamp(10, 20);
+    int stars = base;
+
+    if (floor % 15 == 0) {
+      stars += 6;
+    } else if (floor % 10 == 0) {
+      stars += 3;
     }
 
-    // Boss bonus every 10th floor
-    if (floor % 10 == 0) {
-      baseStars += bossFloorBonusStars;
-    }
+    return stars;
+  }
 
-    return baseStars;
+  /// Get enemy count and level range preview for a specific floor
+  static (int, int, int) getFloorInfoForFloor(int floor) {
+    final int enemyCount = floor <= singleEnemyMaxFloor ? 1 : 2;
+    final int minLevel = floor;
+    final int maxLevel = floor + 2;
+    return (enemyCount, minLevel, maxLevel);
   }
 
   /// Calculate plantmon EXP requirement for level up
@@ -181,9 +175,9 @@ class GameBalance {
   /// Calculate player EXP requirement for level up
   static int getPlayerExpRequirement(int level) => level * playerExpPerLevel;
 
-  /// Get max player party size for a specific floor
-  static int getMaxPlayerPartySize(int floor) {
-    return floor <= singlePlayerMaxFloor ? 1 : 2;
+  /// Get max party size for a specific floor
+  static int getMaxPartySizeForFloor(int floor) {
+    return floor <= singlePartyMemberMaxFloor ? 1 : 2;
   }
 
   /// Get enemy count for a specific floor

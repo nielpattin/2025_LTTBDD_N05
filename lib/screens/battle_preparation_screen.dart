@@ -45,13 +45,11 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
                     const SizedBox(height: 12),
                     _buildRewardPreview(),
                     const SizedBox(height: 16),
-                     _buildPartySelection(profile),
-
+                    _buildPartySelection(profile),
                   ],
                 ),
               ),
-               _buildStartButton(profile),
-
+              _buildStartButton(profile),
             ],
           );
         },
@@ -60,7 +58,9 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
   }
 
   Widget _buildEnemyPreview() {
-    final (enemyCount, minLevel, maxLevel) = _getFloorInfo(widget.floor);
+    final (enemyCount, minLevel, maxLevel) = GameBalance.getFloorInfoForFloor(
+      widget.floor,
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -127,9 +127,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
       );
     }
 
-    final (expMin, expMax, starsEarned) = _calculateRewardRange(
-      widget.floor,
-    );
+    final int starsEarned = GameBalance.getStarRewardForFloor(widget.floor);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -149,9 +147,15 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            '$expMin-$expMax EXP • ⭐ $starsEarned Stars',
-            style: const TextStyle(color: Colors.white60, fontSize: 14),
+          Row(
+            children: [
+              const Icon(Icons.star, color: Colors.amber, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                '$starsEarned Stars',
+                style: const TextStyle(color: Colors.white60, fontSize: 14),
+              ),
+            ],
           ),
         ],
       ),
@@ -166,7 +170,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
       }
     }
 
-    final maxPartySize = GameBalance.getMaxPlayerPartySize(widget.floor);
+    final maxPartySize = GameBalance.getMaxPartySizeForFloor(widget.floor);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +185,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
         ),
         const SizedBox(height: 12),
         ...plantedSlots.map((slotIndex) {
-           final plantmon = profile.getPlantmon(slotIndex)!;
+          final plantmon = profile.getPlantmon(slotIndex)!;
 
           final isSelected = _selectedSlotIndices.contains(slotIndex);
           return _buildPlantmonCard(plantmon, slotIndex, isSelected);
@@ -191,8 +195,8 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
   }
 
   Widget _buildPlantmonCard(Plantmon plantmon, int slotIndex, bool isSelected) {
-    final maxPartySize = GameBalance.getMaxPlayerPartySize(widget.floor);
-    
+    final maxPartySize = GameBalance.getMaxPartySizeForFloor(widget.floor);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -289,7 +293,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
 
   Widget _buildStartButton(PlayerProfile profile) {
     final canStart = _selectedSlotIndices.isNotEmpty;
-    final maxPartySize = GameBalance.getMaxPlayerPartySize(widget.floor);
+    final maxPartySize = GameBalance.getMaxPartySizeForFloor(widget.floor);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -302,7 +306,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
           width: double.infinity,
           height: 54,
           child: ElevatedButton(
-             onPressed: canStart ? () => _startBattle(profile) : null,
+            onPressed: canStart ? () => _startBattle(profile) : null,
 
             style: ElevatedButton.styleFrom(
               backgroundColor: canStart
@@ -330,38 +334,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
     );
   }
 
-  (int, int, int) _getFloorInfo(int floor) {
-    final enemyCount = floor <= GameBalance.singleEnemyMaxFloor ? 1 : 2;
-    final minLevel = floor;
-    final maxLevel = floor + 2;
-    return (enemyCount, minLevel, maxLevel);
-  }
-
-  (int, int, int) _calculateRewardRange(int floor) {
-    final multiplier = 1 + (floor * 0.15);
-    final expMin = (40 * multiplier).round();
-    final expMax = (80 * multiplier).round();
-    
-    int starsEarned;
-    if (floor <= 10) {
-      starsEarned = 5;
-    } else if (floor <= 20) {
-      starsEarned = 8;
-    } else if (floor <= 50) {
-      starsEarned = 15;
-    } else {
-      starsEarned = 20;
-    }
-    
-    if (floor % 10 == 0) {
-      starsEarned += 10;
-    }
-    
-    return (expMin, expMax, starsEarned);
-  }
-
-   void _startBattle(PlayerProfile profile) {
-
+  void _startBattle(PlayerProfile profile) {
     final party = BattleParty(
       plantmonSlotIndices: List.from(_selectedSlotIndices),
     );
@@ -396,12 +369,6 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
     );
     final spritePath = 'assets/images/plants/$typeCapitalized.png';
 
-    return Image.asset(
-      spritePath,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) {
-        return Center(child: Text('🌿', style: const TextStyle(fontSize: 24)));
-      },
-    );
+    return Image.asset(spritePath, fit: BoxFit.contain);
   }
 }

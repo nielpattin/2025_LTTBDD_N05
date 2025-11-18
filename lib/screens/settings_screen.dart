@@ -321,7 +321,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       notification.NotificationBar.success(
         context,
-        'Unlocked all floors (up to ${profile.towerFloor})!',
+        'Unlocked all floors (up to ${profile.currentTowerFloor})!',
       );
     } catch (e) {
       if (!mounted) return;

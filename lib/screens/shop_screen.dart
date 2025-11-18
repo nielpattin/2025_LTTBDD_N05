@@ -36,7 +36,7 @@ class ShopScreen extends StatelessWidget {
       builder: (context, profile, _) {
         final starCost = item.starCost ?? 0;
         final canAffordStars = profile.canAffordStars(starCost);
-        final isUnlocked = profile.towerFloor >= (item.unlockFloor ?? 1);
+        final isUnlocked = profile.currentTowerFloor >= (item.unlockFloor ?? 1);
         final canPurchase = canAffordStars && isUnlocked;
 
         Color getTierColor() {
@@ -223,7 +223,8 @@ class ShopScreen extends StatelessWidget {
       return;
     }
 
-    final isUnlocked = profile.towerFloor >= (item.unlockFloor ?? 1);
+     final isUnlocked = profile.currentTowerFloor >= (item.unlockFloor ?? 1);
+
     if (!isUnlocked) {
       notification.NotificationBar.error(
         context,

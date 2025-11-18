@@ -16,7 +16,7 @@ class PlayerProfile extends ChangeNotifier {
   bool _isFirstTime = true;
   int _level = 1;
   int _exp = 0;
-  int _towerFloor = 1;
+  int _currentTowerFloor = 1;
   List<Achievement> _achievements = [];
   int _careStreak = 0;
   CareResources _careResources = CareResources();
@@ -31,7 +31,7 @@ class PlayerProfile extends ChangeNotifier {
   bool get isFirstTime => _isFirstTime;
   int get level => _level;
   int get exp => _exp;
-  int get towerFloor => _towerFloor;
+  int get currentTowerFloor => _currentTowerFloor;
   List<Achievement> get achievements => List.unmodifiable(_achievements);
   int get careStreak => _careStreak;
   CareResources get careResources => _careResources.regenerate();
@@ -232,7 +232,7 @@ class PlayerProfile extends ChangeNotifier {
     _isFirstTime = await _prefs.getBool('isFirstTime') ?? true;
     _level = await _prefs.getInt('level') ?? 1;
     _exp = await _prefs.getInt('exp') ?? 0;
-    _towerFloor = await _prefs.getInt('towerFloor') ?? 1;
+    _currentTowerFloor = await _prefs.getInt('towerFloor') ?? 1;
 
     // Load garden slots
     await _loadGarden();
@@ -266,7 +266,7 @@ class PlayerProfile extends ChangeNotifier {
     await _prefs.setBool('isFirstTime', _isFirstTime);
     await _prefs.setInt('level', _level);
     await _prefs.setInt('exp', _exp);
-    await _prefs.setInt('towerFloor', _towerFloor);
+    await _prefs.setInt('towerFloor', _currentTowerFloor);
 
     // Persist garden slots
     await _saveGarden();
@@ -346,7 +346,7 @@ class PlayerProfile extends ChangeNotifier {
   }
 
   Future<void> incrementTowerFloor() async {
-    _towerFloor++;
+    _currentTowerFloor++;
     await save();
     notifyListeners();
   }
@@ -356,7 +356,7 @@ class PlayerProfile extends ChangeNotifier {
     _isFirstTime = true;
     _level = 1;
     _exp = 0;
-    _towerFloor = 1;
+    _currentTowerFloor = 1;
     _careStreak = 0;
     _achievements = List.from(defaultAchievements);
     _careResources = CareResources();

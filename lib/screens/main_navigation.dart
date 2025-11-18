@@ -47,11 +47,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.star,
-                      size: 26,
-                      color: Colors.amber,
-                    ),
+                    const Icon(Icons.star, size: 26, color: Colors.amber),
                     const SizedBox(width: 4),
                     Text(
                       '${profile.stars}',
@@ -64,6 +60,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 ),
               ),
             ),
+          // Tower screen: show current floor and stars
           if (_currentIndex == 2)
             Consumer<PlayerProfile>(
               builder: (context, profile, _) => Padding(
@@ -71,24 +68,20 @@ class _MainNavigationState extends State<MainNavigation> {
                 child: Row(
                   children: [
                     Text(
-                      'Floor ${profile.towerFloor}',
+                      'Floor ${profile.currentTowerFloor}',
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 18,
                         fontWeight: FontWeight.w500,
                         color: Colors.white70,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Icon(
-                      Icons.star,
-                      size: 16,
-                      color: Colors.amber,
-                    ),
+                    const Icon(Icons.star, size: 26, color: Colors.amber),
                     const SizedBox(width: 4),
                     Text(
                       '${profile.stars}',
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -97,6 +90,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 ),
               ),
             ),
+          // Achievements screen
           if (_currentIndex == 3)
             Consumer<PlayerProfile>(
               builder: (context, profile, _) {
@@ -116,6 +110,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 );
               },
             ),
+          // Profile screen: settings button
           if (_currentIndex == 4)
             IconButton(
               icon: const Icon(Icons.settings),

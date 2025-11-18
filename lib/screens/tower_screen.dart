@@ -4,6 +4,8 @@ import '../game/player_profile.dart';
 import '../config/game_balance.dart';
 import 'battle_preparation_screen.dart';
 
+enum FloorStatus { cleared, current, locked }
+
 class TowerScreen extends StatefulWidget {
   const TowerScreen({super.key});
 
@@ -20,24 +22,12 @@ class _TowerScreenState extends State<TowerScreen> {
     super.dispose();
   }
 
-  void _scrollToCurrentFloor(int currentFloor) {
-    final itemHeight = 140.0;
-    final targetIndex = currentFloor - 1;
-    final targetOffset = targetIndex * itemHeight;
-
-    _scrollController.animateTo(
-      targetOffset,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<PlayerProfile>(
-      builder: (context, profile, _) {
-        final hasPlantmons = profile.getTotalPlantmons() > 0;
-        final currentFloor = profile.towerFloor;
+      builder: (BuildContext context, PlayerProfile profile, _) {
+        final bool hasPlantmons = profile.getTotalPlantmons() > 0;
+        final int currentFloor = profile.currentTowerFloor;
 
         if (!hasPlantmons) {
           return Center(
@@ -45,7 +35,7 @@ class _TowerScreenState extends State<TowerScreen> {
               padding: const EdgeInsets.all(32),
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+                children: <Widget>[
                   Icon(Icons.store, size: 80, color: Colors.white38),
                   SizedBox(height: 24),
                   Text(
@@ -69,16 +59,19 @@ class _TowerScreenState extends State<TowerScreen> {
         }
 
         return Stack(
-          children: [
+          children: <Widget>[
             Container(
               color: const Color(0xFF0a0a0a),
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16),
                 itemCount: currentFloor + 5,
-                itemBuilder: (context, index) {
-                  final floor = index + 1;
-                  final status = _getFloorStatus(floor, currentFloor);
+                itemBuilder: (BuildContext context, int index) {
+                  final int floor = index + 1;
+                  final FloorStatus status = _getFloorStatus(
+                    floor,
+                    currentFloor,
+                  );
                   return _buildFloorCard(context, floor, status, profile);
                 },
               ),
@@ -98,9 +91,25 @@ class _TowerScreenState extends State<TowerScreen> {
     );
   }
 
+  void _scrollToCurrentFloor(int currentFloor) {
+    final double itemHeight = 140.0;
+    final int targetIndex = currentFloor - 1;
+    final double targetOffset = targetIndex * itemHeight;
+
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
   FloorStatus _getFloorStatus(int floor, int currentFloor) {
-    if (floor < currentFloor) return FloorStatus.cleared;
-    if (floor == currentFloor) return FloorStatus.current;
+    if (floor < currentFloor) {
+      return FloorStatus.cleared;
+    }
+    if (floor == currentFloor) {
+      return FloorStatus.current;
+    }
     return FloorStatus.locked;
   }
 
@@ -110,13 +119,13 @@ class _TowerScreenState extends State<TowerScreen> {
     FloorStatus status,
     PlayerProfile profile,
   ) {
-    final isAccessible =
+    final bool isAccessible =
         status == FloorStatus.current || status == FloorStatus.cleared;
-    final (enemyCount, minLevel, maxLevel) = _getFloorInfo(floor);
-    final (expMin, expMax, starsEarned) = _calculateReward(floor);
+    final int enemyCount = floor <= GameBalance.singleEnemyMaxFloor ? 1 : 2;
+    final int starsEarned = GameBalance.getStarRewardForFloor(floor);
 
     Color? leftAccentColor;
-    String? statusText;
+    String statusText;
     Color statusTextColor;
     double opacity = 1.0;
 
@@ -140,9 +149,8 @@ class _TowerScreenState extends State<TowerScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
+      child: GestureDetector(
         onTap: isAccessible ? () => _startFloor(context, floor) : null,
-        borderRadius: BorderRadius.circular(8),
         child: Opacity(
           opacity: opacity,
           child: Container(
@@ -158,53 +166,33 @@ class _TowerScreenState extends State<TowerScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Row(
-                    children: [
+                    children: <Widget>[
                       Text(
                         '$floor',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 32,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -1,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                          spacing: 6,
+                          children: <Widget>[
                             Text(
                               statusText,
                               style: TextStyle(
                                 color: statusTextColor,
                                 fontSize: 14,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 6),
                             Row(
-                              children: [
+                              children: <Widget>[
                                 Text(
                                   '$enemyCount ${enemyCount == 1 ? 'Enemy' : 'Enemies'}',
-                                  style: const TextStyle(
-                                    color: Colors.white60,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Text(
-                                  '•',
-                                  style: TextStyle(
-                                    color: Colors.white30,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Lv $minLevel-$maxLevel',
                                   style: const TextStyle(
                                     color: Colors.white60,
                                     fontSize: 13,
@@ -223,20 +211,20 @@ class _TowerScreenState extends State<TowerScreen> {
                         ),
                     ],
                   ),
-                  if (isAccessible) ...[
+                  if (isAccessible) ...<Widget>[
                     const SizedBox(height: 12),
                     const Divider(color: Color(0xFF2a2a2a), height: 1),
                     const SizedBox(height: 12),
                     if (status == FloorStatus.cleared)
                       const Row(
-                        children: [
-                          Icon(Icons.history, color: Colors.orange, size: 16),
+                        children: <Widget>[
+                          Icon(Icons.history, color: Colors.orange, size: 20),
                           SizedBox(width: 6),
                           Text(
                             'Practice Mode - No rewards',
                             style: TextStyle(
                               color: Colors.orange,
-                              fontSize: 13,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -244,10 +232,17 @@ class _TowerScreenState extends State<TowerScreen> {
                       )
                     else
                       Row(
-                        children: [
-                          _buildRewardInfo('$expMin-$expMax EXP'),
-                          const SizedBox(width: 16),
-                          _buildRewardInfo('⭐ $starsEarned Stars'),
+                        children: <Widget>[
+                          Icon(Icons.star, color: Colors.amber, size: 20),
+                          const SizedBox(width: 6),
+                          Text(
+                            '$starsEarned stars',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                   ],
@@ -260,56 +255,13 @@ class _TowerScreenState extends State<TowerScreen> {
     );
   }
 
-  Widget _buildRewardInfo(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        color: Colors.white54,
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
-      ),
-    );
-  }
-
-  (int, int, int) _getFloorInfo(int floor) {
-    final enemyCount = floor <= GameBalance.singleEnemyMaxFloor ? 1 : 2;
-    final minLevel = floor;
-    final maxLevel = floor + 2;
-    return (enemyCount, minLevel, maxLevel);
-  }
-
-  (int, int, int) _calculateReward(int floor) {
-    final multiplier = 1 + (floor * 0.15);
-    final expMin = (40 * multiplier).round();
-    final expMax = (80 * multiplier).round();
-    
-    int starsEarned;
-    if (floor <= 10) {
-      starsEarned = 3;
-    } else if (floor <= 20) {
-      starsEarned = 5;
-    } else if (floor <= 50) {
-      starsEarned = 10;
-    } else if (floor <= 100) {
-      starsEarned = 15;
-    } else {
-      starsEarned = 20;
-    }
-    
-    if (floor % 10 == 0) {
-      starsEarned += 5;
-    }
-    
-    return (expMin, expMax, starsEarned);
-  }
-
   void _startFloor(BuildContext context, int floor) {
-    final profile = context.read<PlayerProfile>();
-    final isPracticeMode = floor < profile.towerFloor;
-    
+    PlayerProfile profile = context.read<PlayerProfile>();
+    bool isPracticeMode = floor < profile.currentTowerFloor;
+
     Navigator.push(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<BattlePreparationScreen>(
         builder: (_) => BattlePreparationScreen(
           floor: floor,
           isPracticeMode: isPracticeMode,
@@ -318,5 +270,3 @@ class _TowerScreenState extends State<TowerScreen> {
     );
   }
 }
-
-enum FloorStatus { cleared, current, locked }
