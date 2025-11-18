@@ -264,8 +264,6 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
                         _buildStatBadge('ATK: ${plantmon.attack}'),
                         const SizedBox(width: 6),
                         _buildStatBadge('DEF: ${plantmon.defense}'),
-                        const SizedBox(width: 6),
-                        _buildStatBadge('SPD: ${plantmon.speed}'),
                       ],
                     ),
                   ],

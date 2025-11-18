@@ -8,6 +8,7 @@ import '../widgets/timeline_bar_widget.dart';
 import '../widgets/battle_result_widgets.dart';
 import 'package:flame/game.dart';
 import '../game/battle_canvas_game.dart';
+import '../config/game_balance.dart';
 
 class BattleScreen extends StatefulWidget {
   final int slotIndex;
@@ -329,9 +330,8 @@ class _BattleScreenState extends State<BattleScreen>
     TimelineEntity selectedEntity,
   ) {
     final canUseHeavyAttack =
-        selectedEntity.mp >= BattleState.heavyAttackMpCost;
+        selectedEntity.mp >= GameBalance.heavyAttackMpCost;
 
-    // Helper to build uniform action button
     Widget buildActionButton({
       required String label,
       required IconData icon,
@@ -402,7 +402,7 @@ class _BattleScreenState extends State<BattleScreen>
         buildActionButton(
           label: canUseHeavyAttack
               ? 'HEAVY ATTACK'
-              : 'HEAVY ATTACK (${BattleState.heavyAttackMpCost} MP)',
+              : 'HEAVY ATTACK (${GameBalance.heavyAttackMpCost} MP)',
           icon: Icons.auto_awesome,
           onPressed: () => battleState.queueAction(ActionType.heavyAttack),
           color: const Color(0xFF7B1FA2),

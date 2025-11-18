@@ -10,7 +10,6 @@ class Plantmon {
   final int maxHp;
   final int attack;
   final int defense;
-  final int speed;
 
   Plantmon({
     required this.id,
@@ -22,14 +21,13 @@ class Plantmon {
     required this.maxHp,
     required this.attack,
     required this.defense,
-    required this.speed,
   });
 
   int get expToNextLevel => GameBalance.getPlantmonExpRequirement(level);
 
   Plantmon addExp(int amount) {
-    final newExp = exp + amount;
-    final expNeeded = expToNextLevel;
+    final int newExp = exp + amount;
+    final int expNeeded = expToNextLevel;
 
     if (newExp >= expNeeded) {
       return levelUp().copyWith(exp: newExp - expNeeded);
@@ -39,8 +37,8 @@ class Plantmon {
   }
 
   Plantmon levelUp() {
-    const statIncrease = GameBalance.levelUpStatIncrease;
-    const hpIncrease = GameBalance.levelUpHpIncrease;
+    const int statIncrease = GameBalance.levelUpStatIncrease;
+    const int hpIncrease = GameBalance.levelUpHpIncrease;
 
     return copyWith(
       level: level + 1,
@@ -49,14 +47,13 @@ class Plantmon {
       maxHp: maxHp + hpIncrease,
       attack: attack + statIncrease,
       defense: defense + statIncrease,
-      speed: speed + statIncrease,
     );
   }
 
   // ===== JSON SERIALIZATION =====
 
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'id': id,
       'type': type,
       'name': name,
@@ -66,21 +63,20 @@ class Plantmon {
       'maxHp': maxHp,
       'attack': attack,
       'defense': defense,
-      'speed': speed,
     };
   }
 
   factory Plantmon.fromJson(Map<String, dynamic> json) {
     try {
-      final idVal = json['id'];
-      final typeVal = json['type'];
-      final nameVal = json['name'];
-      final levelVal = json['level'];
-      final expVal = json['exp'];
-      final hpVal = json['hp'];
-      final attackVal = json['attack'];
-      final defenseVal = json['defense'];
-      final speedVal = json['speed'];
+      final Object? idVal = json['id'];
+      final Object? typeVal = json['type'];
+      final Object? nameVal = json['name'];
+      final Object? levelVal = json['level'];
+      final Object? expVal = json['exp'];
+      final Object? hpVal = json['hp'];
+      final Object? maxHpVal = json['maxHp'];
+      final Object? attackVal = json['attack'];
+      final Object? defenseVal = json['defense'];
 
       if (idVal == null) throw Exception('Plantmon id is null');
       if (typeVal == null) throw Exception('Plantmon type is null');
@@ -88,9 +84,9 @@ class Plantmon {
       if (levelVal == null) throw Exception('Plantmon level is null');
       if (expVal == null) throw Exception('Plantmon exp is null');
       if (hpVal == null) throw Exception('Plantmon hp is null');
+      if (maxHpVal == null) throw Exception('Plantmon maxHp is null');
       if (attackVal == null) throw Exception('Plantmon attack is null');
       if (defenseVal == null) throw Exception('Plantmon defense is null');
-      if (speedVal == null) throw Exception('Plantmon speed is null');
 
       return Plantmon(
         id: idVal as String,
@@ -99,10 +95,9 @@ class Plantmon {
         level: levelVal as int,
         exp: expVal as int,
         hp: hpVal as int,
-        maxHp: json['maxHp'] as int? ?? hpVal,
+        maxHp: maxHpVal as int,
         attack: attackVal as int,
         defense: defenseVal as int,
-        speed: speedVal as int,
       );
     } catch (e) {
       rethrow;
@@ -119,7 +114,6 @@ class Plantmon {
     int? maxHp,
     int? attack,
     int? defense,
-    int? speed,
   }) {
     return Plantmon(
       id: id ?? this.id,
@@ -131,7 +125,6 @@ class Plantmon {
       maxHp: maxHp ?? this.maxHp,
       attack: attack ?? this.attack,
       defense: defense ?? this.defense,
-      speed: speed ?? this.speed,
     );
   }
 

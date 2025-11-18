@@ -49,8 +49,6 @@ class GameBalance {
   static const int basePowerMax = 12;
   static const int baseDefenseMin = 6;
   static const int baseDefenseMax = 10;
-  static const int baseSpeedMin = 5;
-  static const int baseSpeedMax = 9;
   static const int baseHpMin = 40;
   static const int baseHpMax = 50;
 
@@ -69,7 +67,7 @@ class GameBalance {
   // ==========================================
 
   /// Plantmon level-up bonuses
-  static const int levelUpStatIncrease = 3; // +3 ATK/DEF/SPD per level
+  static const int levelUpStatIncrease = 3; // +3 ATK/DEF per level
   static const int levelUpHpIncrease = 10; // +10 HP per level
   static const int expPerLevel = 100; // Level N needs N×100 EXP
 
@@ -105,8 +103,13 @@ class GameBalance {
   static const double timelineCastEnd = 1.0;
   static const double playerMidStart = 0.35;
   static const double enemyStart = 0.0;
-  static const int baseSpeed = 10;
-  static const double speedScalar = 0.18;
+  static const double baseSpeed = 0.18;
+
+  static const double playerSpeedMinMultiplier = 1.0;
+  static const double playerSpeedMaxMultiplier = 1.1;
+  static const double enemySpeedMinMultiplier = 0.9;
+  static const double enemySpeedMaxMultiplier = 1.1;
+
   static const int baseSkillCooldown = 3;
 
   // ==========================================

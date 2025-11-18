@@ -5,9 +5,6 @@ import '../config/game_balance.dart';
 enum CareQuality { poor, good, excellent }
 
 class CareService {
-  static const int waterExpReward = GameBalance.waterExpReward;
-  static const int fertilizerExpReward = GameBalance.fertilizerExpReward;
-
   static bool canWater(PlayerProfile profile) {
     return profile.careResources.canUseWater();
   }
@@ -29,7 +26,7 @@ class CareService {
     }
 
     await profile.useWater();
-    final updatedPlantmon = plantmon.addExp(waterExpReward);
+    final updatedPlantmon = plantmon.addExp(GameBalance.waterExpReward);
     return updatedPlantmon;
   }
 
@@ -42,20 +39,20 @@ class CareService {
     }
 
     await profile.useFertilizer();
-    final updatedPlantmon = plantmon.addExp(fertilizerExpReward);
+    final updatedPlantmon = plantmon.addExp(GameBalance.fertilizerExpReward);
     return updatedPlantmon;
   }
 
   static int getWaterExpReward(Plantmon plantmon) {
-    return waterExpReward;
+    return GameBalance.waterExpReward;
   }
 
   static int getFertilizerExpReward(Plantmon plantmon) {
-    return fertilizerExpReward;
+    return GameBalance.fertilizerExpReward;
   }
 
   static int getExpReward(Plantmon plantmon) {
-    return waterExpReward;
+    return GameBalance.waterExpReward;
   }
 
   static CareQuality calculateCareQuality(Plantmon plantmon) {

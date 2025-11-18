@@ -40,17 +40,6 @@ final rarityStatMultipliers = {
   Rarity.legendary: GameBalance.legendaryMultiplier,
 };
 
-class StatRanges {
-  static const powerMin = GameBalance.basePowerMin;
-  static const powerMax = GameBalance.basePowerMax;
-  static const defenseMin = GameBalance.baseDefenseMin;
-  static const defenseMax = GameBalance.baseDefenseMax;
-  static const speedMin = GameBalance.baseSpeedMin;
-  static const speedMax = GameBalance.baseSpeedMax;
-  static const hpMin = GameBalance.baseHpMin;
-  static const hpMax = GameBalance.baseHpMax;
-}
-
 String generatePlantmonId() {
   final timestamp = DateTime.now().millisecondsSinceEpoch;
   final random = Random().nextInt(9999);
@@ -73,20 +62,20 @@ Plantmon generateRandomPlantmon({
   final targetLevel = level ?? 1;
 
   final basePower =
-      random.nextInt(StatRanges.powerMax - StatRanges.powerMin + 1) +
-      StatRanges.powerMin;
+      random.nextInt(GameBalance.basePowerMax - GameBalance.basePowerMin + 1) +
+      GameBalance.basePowerMin;
   final baseDefense =
-      random.nextInt(StatRanges.defenseMax - StatRanges.defenseMin + 1) +
-      StatRanges.defenseMin;
-  final baseSpeed =
-      random.nextInt(StatRanges.speedMax - StatRanges.speedMin + 1) +
-      StatRanges.speedMin;
+      random.nextInt(
+        GameBalance.baseDefenseMax - GameBalance.baseDefenseMin + 1,
+      ) +
+      GameBalance.baseDefenseMin;
   final baseHp =
-      random.nextInt(StatRanges.hpMax - StatRanges.hpMin + 1) +
-      StatRanges.hpMin;
+      random.nextInt(GameBalance.baseHpMax - GameBalance.baseHpMin + 1) +
+      GameBalance.baseHpMin;
 
   final multiplier = rarityStatMultipliers[rarity] ?? 1.0;
-  final levelMultiplier = 1.0 + ((targetLevel - 1) * GameBalance.statScalingPerLevel);
+  final levelMultiplier =
+      1.0 + ((targetLevel - 1) * GameBalance.statScalingPerLevel);
 
   return Plantmon(
     id: generatePlantmonId(),
@@ -96,7 +85,6 @@ Plantmon generateRandomPlantmon({
     exp: 0,
     attack: (basePower * multiplier * levelMultiplier).round(),
     defense: (baseDefense * multiplier * levelMultiplier).round(),
-    speed: (baseSpeed * multiplier * levelMultiplier).round(),
     hp: (baseHp * multiplier * levelMultiplier).round(),
     maxHp: (baseHp * multiplier * levelMultiplier).round(),
   );

@@ -19,6 +19,7 @@ class TimelineEntity {
   bool isDefending;
   bool isPlayingDeathAnimation;
   double deathAnimationProgress;
+  double speed;
 
   TimelineEntity({
     required this.id,
@@ -35,6 +36,7 @@ class TimelineEntity {
     this.isDefending = false,
     this.isPlayingDeathAnimation = false,
     this.deathAnimationProgress = 0.0,
+    required this.speed,
   });
 
   bool get isDead => plantmon.hp <= 0;

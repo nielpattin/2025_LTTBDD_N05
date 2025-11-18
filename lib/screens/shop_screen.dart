@@ -12,11 +12,10 @@ import '../widgets/notification_bar.dart' as notification;
 class ShopScreen extends StatelessWidget {
   const ShopScreen({super.key});
 
-   @override
-   Widget build(BuildContext context) {
-     return Consumer<PlayerProfile>(
-       builder: (context, profile, _) {
-
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<PlayerProfile>(
+      builder: (context, profile, _) {
         final List<Widget> items = [];
 
         for (final item in shopInventory) {
@@ -223,7 +222,7 @@ class ShopScreen extends StatelessWidget {
       return;
     }
 
-     final isUnlocked = profile.currentTowerFloor >= (item.unlockFloor ?? 1);
+    final isUnlocked = profile.currentTowerFloor >= (item.unlockFloor ?? 1);
 
     if (!isUnlocked) {
       notification.NotificationBar.error(
@@ -468,7 +467,6 @@ class ShopScreen extends StatelessWidget {
                         _buildStatRow('HP', plantmon.hp, 100),
                         _buildStatRow('ATK', plantmon.attack, 150),
                         _buildStatRow('DEF', plantmon.defense, 150),
-                        _buildStatRow('SPD', plantmon.speed, 150),
                       ],
                     ),
                   ),
@@ -574,10 +572,9 @@ class ShopScreen extends StatelessWidget {
     );
   }
 
-   Future<void> _selectPlantmon(BuildContext context, Plantmon plantmon) async {
-     final profile = context.read<PlayerProfile>();
-     final emptySlots = profile.getEmptySlots();
-
+  Future<void> _selectPlantmon(BuildContext context, Plantmon plantmon) async {
+    final profile = context.read<PlayerProfile>();
+    final emptySlots = profile.getEmptySlots();
 
     if (emptySlots.isEmpty) {
       if (context.mounted) {
@@ -590,14 +587,13 @@ class ShopScreen extends StatelessWidget {
     }
 
     try {
-       await profile.plantInSlot(emptySlots.first.index, plantmon);
- 
-       if (!context.mounted) {
-         return;
-       }
- 
-       await profile.updatePlantmonCount(profile.getTotalPlantmons());
+      await profile.plantInSlot(emptySlots.first.index, plantmon);
 
+      if (!context.mounted) {
+        return;
+      }
+
+      await profile.updatePlantmonCount(profile.getTotalPlantmons());
     } catch (e) {
       if (context.mounted) {
         notification.NotificationBar.error(context, 'Purchase error: $e');

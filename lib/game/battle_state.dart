@@ -28,19 +28,6 @@ class BattleState extends ChangeNotifier {
   bool _anyDeathAnimationsPlaying = false;
   int _turnCount = 0; // Prevent concurrent action execution
 
-  // Constants (now from GameBalance)
-  static const double waitRangeEnd = GameBalance.timelineWaitRangeEnd;
-  static const double castStart = GameBalance.timelineCastStart;
-  static const double castEnd = GameBalance.timelineCastEnd;
-  static const double playerMidStart = GameBalance.playerMidStart;
-  static const double enemyStart = GameBalance.enemyStart;
-  static const int mpGainPerLoop = GameBalance.mpGainPerLoop;
-  static const int baseSpeed = GameBalance.baseSpeed;
-  static const double speedScalar = GameBalance.speedScalar;
-  static const int baseSkillCooldown = GameBalance.baseSkillCooldown;
-  static const int energyRegenPerSecond = GameBalance.energyRegenPerSecond;
-  static const int heavyAttackMpCost = GameBalance.heavyAttackMpCost;
-
   // Notification callbacks
   void Function(String message, String entityId, {required bool byPlayer})?
   onNotification;
@@ -81,12 +68,14 @@ class BattleState extends ChangeNotifier {
 
     // Add player entities
     for (int i = 0; i < playerParty.length; i++) {
+      final double speed = _getEntitySpeed(isPlayer: true);
       _timeline.add(
         TimelineEntity(
           id: 'P${i + 1}',
           plantmon: playerParty[i],
           isPlayer: true,
-          position: playerMidStart,
+          position: GameBalance.playerMidStart,
+          speed: speed,
         ),
       );
     }
@@ -94,13 +83,15 @@ class BattleState extends ChangeNotifier {
     // Generate and add enemy entities
     final enemiesData = _generateTowerEnemies(floor);
     for (int i = 0; i < enemiesData.length; i++) {
+      final double speed = _getEntitySpeed(isPlayer: false);
       _timeline.add(
         TimelineEntity(
           id: 'E${i + 1}',
           plantmon: enemiesData[i]['plantmon'] as Plantmon,
           isPlayer: false,
           spriteOverride: enemiesData[i]['sprite'] as String?,
-          position: enemyStart,
+          position: GameBalance.enemyStart,
+          speed: speed,
         ),
       );
     }
@@ -133,12 +124,6 @@ class BattleState extends ChangeNotifier {
           ) +
           GameBalance.baseDefenseMin;
 
-      final baseSpeed =
-          random.nextInt(
-            GameBalance.baseSpeedMax - GameBalance.baseSpeedMin + 1,
-          ) +
-          GameBalance.baseSpeedMin;
-
       final baseHp =
           random.nextInt(GameBalance.baseHpMax - GameBalance.baseHpMin + 1) +
           GameBalance.baseHpMin;
@@ -155,7 +140,6 @@ class BattleState extends ChangeNotifier {
         exp: 0,
         attack: (basePower * enemyMultiplier).round(),
         defense: (baseDefense * enemyMultiplier).round(),
-        speed: baseSpeed,
         hp: (baseHp * enemyMultiplier).round(),
         maxHp: (baseHp * enemyMultiplier).round(),
       );
@@ -175,6 +159,21 @@ class BattleState extends ChangeNotifier {
     );
   }
 
+  double _getEntitySpeed({required bool isPlayer}) {
+    final double minMultiplier = isPlayer
+        ? GameBalance.playerSpeedMinMultiplier
+        : GameBalance.enemySpeedMinMultiplier;
+    final double maxMultiplier = isPlayer
+        ? GameBalance.playerSpeedMaxMultiplier
+        : GameBalance.enemySpeedMaxMultiplier;
+    if (maxMultiplier <= minMultiplier) {
+      return GameBalance.baseSpeed * minMultiplier;
+    }
+
+    final double midMultiplier = (minMultiplier + maxMultiplier) / 2;
+    return GameBalance.baseSpeed * midMultiplier;
+  }
+
   void _updateTimeline(double dt) {
     if (!_isRunning) return;
 
@@ -183,7 +182,7 @@ class BattleState extends ChangeNotifier {
     bool energyChanged = false;
 
     // Accumulate regen so we only emit energy changes on whole-number ticks
-    _energyRegenRemainder += energyRegenPerSecond * dt;
+    _energyRegenRemainder += GameBalance.energyRegenPerSecond * dt;
     final int energyTicks = _energyRegenRemainder.floor();
     if (energyTicks > 0) {
       _energyRegenRemainder -= energyTicks;
@@ -204,12 +203,15 @@ class BattleState extends ChangeNotifier {
       }
 
       final oldPosition = entity.position;
-      final increment = (entity.plantmon.speed / baseSpeed) * speedScalar * dt;
+      final double increment = entity.speed * dt;
 
       if (entity.phase == TimelinePhase.waiting) {
-        entity.position = (entity.position + increment).clamp(0.0, castStart);
-        if (entity.position >= castStart - 0.0001) {
-          entity.position = castStart;
+        entity.position = (entity.position + increment).clamp(
+          0.0,
+          GameBalance.timelineCastStart,
+        );
+        if (entity.position >= GameBalance.timelineCastStart - 0.0001) {
+          entity.position = GameBalance.timelineCastStart;
           if (entity.isPlayer) {
             _enterPlayerCast(entity);
           } else {
@@ -219,19 +221,19 @@ class BattleState extends ChangeNotifier {
         }
       } else if (entity.phase == TimelinePhase.casting) {
         entity.position = (entity.position + increment).clamp(
-          castStart,
-          castEnd,
+          GameBalance.timelineCastStart,
+          GameBalance.timelineCastEnd,
         );
 
-        // Check if entity with shield reaches end of cast zone
-        if (entity.position >= castEnd) {
-          if (entity.isDefending) {
+        // Check if entity reaches end of cast zone
+        if (entity.position >= GameBalance.timelineCastEnd) {
+          if (entity.queuedAction != null) {
+            _resolveAction(entity);
+            stateChanged = true;
+          } else if (entity.isDefending) {
             // Shield timeout: remove shield and reset entity
             entity.isDefending = false;
             _resetEntity(entity);
-            stateChanged = true;
-          } else if (entity.queuedAction != null) {
-            _resolveAction(entity);
             stateChanged = true;
           }
         }
@@ -272,7 +274,7 @@ class BattleState extends ChangeNotifier {
   void _queueEnemyAction(TimelineEntity entity) {
     final random = Random();
 
-    final canUseHeavyAttack = entity.mp >= heavyAttackMpCost;
+    final canUseHeavyAttack = entity.mp >= GameBalance.heavyAttackMpCost;
     final roll = random.nextDouble();
 
     if (canUseHeavyAttack) {
@@ -340,9 +342,10 @@ class BattleState extends ChangeNotifier {
     }
 
     // Check MP cost for Heavy Attack
-    if (action == ActionType.heavyAttack && entity.mp < heavyAttackMpCost) {
+    if (action == ActionType.heavyAttack &&
+        entity.mp < GameBalance.heavyAttackMpCost) {
       onNotification?.call(
-        'Not enough MP! Need $heavyAttackMpCost MP',
+        'Not enough MP! Need ${GameBalance.heavyAttackMpCost} MP',
         entity.id,
         byPlayer: true,
       );
@@ -463,7 +466,7 @@ class BattleState extends ChangeNotifier {
       int damage;
       if (attacker.queuedAction == ActionType.heavyAttack) {
         // Consume MP for heavy attack
-        attacker.mp = max(0, attacker.mp - heavyAttackMpCost);
+        attacker.mp = max(0, attacker.mp - GameBalance.heavyAttackMpCost);
 
         damage = _calculateHeavyAttackDamage(
           attacker.plantmon,
@@ -531,7 +534,7 @@ class BattleState extends ChangeNotifier {
       if (entity.phase != TimelinePhase.casting) {
         continue;
       }
-      if (entity.position >= castEnd) {
+      if (entity.position >= GameBalance.timelineCastEnd) {
         continue;
       }
       _interruptEntity(entity);
@@ -551,7 +554,7 @@ class BattleState extends ChangeNotifier {
 
   void _interruptEntity(TimelineEntity entity) {
     entity.isInterrupted = true;
-    entity.position = playerMidStart;
+    entity.position = GameBalance.playerMidStart;
     entity.phase = TimelinePhase.waiting;
     entity.queuedAction = null;
     entity.targetId = null;
@@ -581,7 +584,7 @@ class BattleState extends ChangeNotifier {
     entity.targetId = null;
     entity.isAttacking = false;
     entity.isInterrupted = false;
-    entity.mp += mpGainPerLoop;
+    entity.mp += GameBalance.mpGainPerLoop;
   }
 
   bool _checkBattleOver() {

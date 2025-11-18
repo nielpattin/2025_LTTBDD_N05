@@ -21,7 +21,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     'health': 80,
     'attack': 20,
     'defense': 20,
-    'speed': 20,
   };
   int _currentPage = 0;
   final PageController _pageController = PageController();
@@ -345,9 +344,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             maxValue: _statMaxByName['defense']!,
                           ),
                           _buildStatBar(
-                            label: 'SPEED',
-                            current: plantmon.speed,
-                            maxValue: _statMaxByName['speed']!,
+                            label: 'ATTACK',
+                            current: plantmon.attack,
+                            maxValue: _statMaxByName['attack']!,
+                          ),
+                          _buildStatBar(
+                            label: 'DEFENSE',
+                            current: plantmon.defense,
+                            maxValue: _statMaxByName['defense']!,
                           ),
                         ],
                       ),
@@ -418,7 +422,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     required int current,
     required int maxValue,
   }) {
-    final double progress = maxValue <= 0 ? 0.0 : (current / maxValue).clamp(0.0, 1.0);
+    final double progress = maxValue <= 0
+        ? 0.0
+        : (current / maxValue).clamp(0.0, 1.0);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(

@@ -22,10 +22,7 @@ class PlantViewScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: const Color(0xFF2a2a2a),
-            height: 1,
-          ),
+          child: Container(color: const Color(0xFF2a2a2a), height: 1),
         ),
       ),
       body: Container(
@@ -105,7 +102,9 @@ class PlantViewScreen extends StatelessWidget {
               value: expProgress,
               minHeight: 8,
               backgroundColor: const Color(0xFF2a2a2a),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF66BB6A)),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF66BB6A),
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -161,7 +160,7 @@ class PlantViewScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          // Row 2: Defense, Speed
+          // Row 2: Defense
           Row(
             children: [
               Expanded(
@@ -169,14 +168,6 @@ class PlantViewScreen extends StatelessWidget {
                   'Defense',
                   '${plantmon.defense}',
                   Colors.green,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: _buildCompactStatTile(
-                  'Speed',
-                  '${plantmon.speed}',
-                  Colors.yellow,
                 ),
               ),
             ],
@@ -299,7 +290,9 @@ class PlantViewScreen extends StatelessWidget {
                                   }
                                 : null,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: canWater ? const Color(0xFF42A5F5) : const Color(0xFF2a2a2a),
+                              backgroundColor: canWater
+                                  ? const Color(0xFF42A5F5)
+                                  : const Color(0xFF2a2a2a),
                               disabledBackgroundColor: const Color(0xFF2a2a2a),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -351,7 +344,8 @@ class PlantViewScreen extends StatelessWidget {
                             color: Colors.white,
                           ),
                         ),
-                        if (fertRegen != null && resources.fertilizerCharges < 5)
+                        if (fertRegen != null &&
+                            resources.fertilizerCharges < 5)
                           Text(
                             CareResources.formatDuration(fertRegen),
                             style: const TextStyle(
@@ -367,11 +361,16 @@ class PlantViewScreen extends StatelessWidget {
                           child: ElevatedButton(
                             onPressed: canFert
                                 ? () async {
-                                    await _handleFertilizerAction(context, plantmon);
+                                    await _handleFertilizerAction(
+                                      context,
+                                      plantmon,
+                                    );
                                   }
                                 : null,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: canFert ? const Color(0xFF66BB6A) : const Color(0xFF2a2a2a),
+                              backgroundColor: canFert
+                                  ? const Color(0xFF66BB6A)
+                                  : const Color(0xFF2a2a2a),
                               disabledBackgroundColor: const Color(0xFF2a2a2a),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -420,9 +419,9 @@ class PlantViewScreen extends StatelessWidget {
   ) async {
     final profile = context.read<PlayerProfile>();
     final rewards = context.read<RewardsState>();
- 
+
     final updatedPlantmon = await CareService.performWater(profile, plantmon);
- 
+
     if (CareService.shouldDropRareItem(updatedPlantmon)) {
       await rewards.addRareItemDrop();
       if (context.mounted) {
@@ -433,17 +432,17 @@ class PlantViewScreen extends StatelessWidget {
         );
       }
     }
- 
+
     await profile.updateCareStreak();
- 
+
     if (updatedPlantmon.level > plantmon.level) {
       if (context.mounted) {
         _showLevelUpDialog(context, updatedPlantmon);
       }
     }
- 
+
     await profile.updatePlantmonInSlot(slotIndex, updatedPlantmon);
- 
+
     if (context.mounted) {
       notification.NotificationBar.success(
         context,
@@ -452,16 +451,19 @@ class PlantViewScreen extends StatelessWidget {
       );
     }
   }
- 
+
   Future<void> _handleFertilizerAction(
     BuildContext context,
     Plantmon plantmon,
   ) async {
     final profile = context.read<PlayerProfile>();
     final rewards = context.read<RewardsState>();
- 
-    final updatedPlantmon = await CareService.performFertilize(profile, plantmon);
- 
+
+    final updatedPlantmon = await CareService.performFertilize(
+      profile,
+      plantmon,
+    );
+
     if (CareService.shouldDropRareItem(updatedPlantmon)) {
       await rewards.addRareItemDrop();
       if (context.mounted) {
@@ -472,17 +474,17 @@ class PlantViewScreen extends StatelessWidget {
         );
       }
     }
- 
+
     await profile.updateCareStreak();
- 
+
     if (updatedPlantmon.level > plantmon.level) {
       if (context.mounted) {
         _showLevelUpDialog(context, updatedPlantmon);
       }
     }
- 
+
     await profile.updatePlantmonInSlot(slotIndex, updatedPlantmon);
- 
+
     if (context.mounted) {
       notification.NotificationBar.success(
         context,
@@ -491,17 +493,13 @@ class PlantViewScreen extends StatelessWidget {
       );
     }
   }
- 
-  void _showLevelUpDialog(BuildContext context, Plantmon plantmon) {
 
+  void _showLevelUpDialog(BuildContext context, Plantmon plantmon) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1e1e1e),
-        title: const Text(
-          'Level Up!',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Level Up!', style: TextStyle(color: Colors.white)),
         content: Text(
           '${plantmon.name} reached level ${plantmon.level}!\n\nStats increased!',
           style: const TextStyle(color: Colors.white70),
@@ -509,10 +507,7 @@ class PlantViewScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'OK',
-              style: TextStyle(color: Color(0xFF66BB6A)),
-            ),
+            child: const Text('OK', style: TextStyle(color: Color(0xFF66BB6A))),
           ),
         ],
       ),
@@ -532,7 +527,9 @@ class PlantViewScreen extends StatelessWidget {
         spritePath,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
-          return const Center(child: Text('🌿', style: TextStyle(fontSize: 32)));
+          return const Center(
+            child: Text('🌿', style: TextStyle(fontSize: 32)),
+          );
         },
       ),
     );
