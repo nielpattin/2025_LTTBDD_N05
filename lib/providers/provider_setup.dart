@@ -3,19 +3,19 @@ import 'package:provider/provider.dart';
 import '../game/player_profile.dart';
 import '../providers/rewards_state.dart';
 import '../theme/app_theme.dart';
- 
+
 class ProviderSetup {
   static final PlayerProfile _playerProfileInstance = PlayerProfile();
   static final RewardsState _rewardsStateInstance = RewardsState();
-
 
   static PlayerProfile get playerProfile => _playerProfileInstance;
 
   static Future<void> initialize() async {
     await _playerProfileInstance.load();
+    _playerProfileInstance.triggerResourceRegeneration();
     await _rewardsStateInstance.load();
   }
- 
+
   static Widget createApp({required Widget home}) {
     return MultiProvider(
       providers: [

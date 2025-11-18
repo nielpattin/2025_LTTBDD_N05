@@ -7,7 +7,7 @@ import '../models/care_resources.dart';
 import '../config/game_balance.dart';
 import '../models/slot.dart';
 import '../models/plantmon.dart';
- 
+
 class PlayerProfile extends ChangeNotifier {
   late final SharedPreferencesAsync _prefs = StorageService().prefs;
 
@@ -25,7 +25,6 @@ class PlayerProfile extends ChangeNotifier {
   final int maxSlots = 12;
 
   List<Slot> get slots => List.unmodifiable(_slots);
-
 
   int get stars => _stars;
   bool get isFirstTime => _isFirstTime;
@@ -55,6 +54,16 @@ class PlayerProfile extends ChangeNotifier {
 
   int getTotalPlantmons() {
     return _slots.where((slot) => slot.plantmon != null).length;
+  }
+
+  List<int> getPlantedSlotIndices() {
+    final List<int> indices = [];
+    for (int i = 0; i < _slots.length; i++) {
+      if (_slots[i].plantmon != null) {
+        indices.add(i);
+      }
+    }
+    return indices;
   }
 
   Slot? getNextLockedSlot() {
@@ -159,37 +168,10 @@ class PlayerProfile extends ChangeNotifier {
           return Slot.fromJson(json as Map<String, dynamic>);
         }).toList();
       } else {
-        final oldPotsJson = await _prefs.getString('garden_pots');
-        if (oldPotsJson != null) {
-          await _migrateGardenFromPots(oldPotsJson);
-        } else {
-          _initializeDefaultSlot();
-        }
+        _initializeDefaultSlot();
       }
 
       _ensureAllSlotsExist();
-    } catch (e) {
-      _initializeDefaultSlot();
-    }
-  }
-
-  Future<void> _migrateGardenFromPots(String potsJson) async {
-    try {
-      final List<dynamic> decoded = jsonDecode(potsJson);
-      _slots = decoded.map((json) {
-        final slotIndex = json['slotIndex'] as int;
-        return Slot(
-          id: 'slot_$slotIndex',
-          index: slotIndex,
-          isUnlocked: json['isUnlocked'] as bool,
-          unlockLevel: getSlotUnlockLevel(slotIndex),
-          plantmon: json['plantmon'] != null
-              ? Plantmon.fromJson(json['plantmon'] as Map<String, dynamic>)
-              : null,
-        );
-      }).toList();
-
-      await _saveGarden();
     } catch (e) {
       _initializeDefaultSlot();
     }
@@ -236,7 +218,6 @@ class PlayerProfile extends ChangeNotifier {
 
     // Load garden slots
     await _loadGarden();
-
 
     // Load care streak system
     _careStreak = await _prefs.getInt('careStreak') ?? 0;
@@ -312,27 +293,69 @@ class PlayerProfile extends ChangeNotifier {
     while (_exp >= expToNextLevel && _level < 99) {
       _exp -= expToNextLevel;
       _level++;
-      _updateAchievement('level_5', _level);
-      _updateAchievement('expert_trainer', _level);
-      _updateAchievement('master_trainer', _level);
+      _handleAchievementProgress('level_5', _level);
+      _handleAchievementProgress('expert_trainer', _level);
+      _handleAchievementProgress('master_trainer', _level);
     }
   }
 
   Future<void> updatePlantmonCount(int count) async {
-
-    _updateAchievement('first_plantmon', count);
-    _updateAchievement('collector_i', count);
-    _updateAchievement('collector_ii', count);
-    _updateAchievement('full_garden', count);
+    _handleAchievementProgress('first_plantmon', count);
+    _handleAchievementProgress('collector_i', count);
+    _handleAchievementProgress('collector_ii', count);
+    _handleAchievementProgress('full_garden', count);
     await save();
     notifyListeners();
   }
 
-  void _updateAchievement(String id, int progress) {
-
+  void _handleAchievementProgress(String id, int progress) {
     final index = _achievements.indexWhere((a) => a.id == id);
-    if (index >= 0) {
-      _achievements[index] = _achievements[index].copyWith(progress: progress);
+    if (index < 0) {
+      return;
+    }
+
+    final Achievement current = _achievements[index];
+    final bool wasCompleted = current.isCompleted;
+    final Achievement updated = current.copyWith(progress: progress);
+    _achievements[index] = updated;
+
+    if (!wasCompleted && updated.isCompleted) {
+      _grantAchievementReward(id);
+    }
+  }
+
+  void _grantAchievementReward(String id) {
+    int rewardStars = 0;
+
+    switch (id) {
+      case 'first_plantmon':
+        rewardStars = 5;
+        break;
+      case 'collector_i':
+        rewardStars = 10;
+        break;
+      case 'collector_ii':
+        rewardStars = 20;
+        break;
+      case 'level_5':
+        rewardStars = 10;
+        break;
+      case 'expert_trainer':
+        rewardStars = 20;
+        break;
+      case 'master_trainer':
+        rewardStars = 30;
+        break;
+      case 'full_garden':
+        rewardStars = 50;
+        break;
+      default:
+        rewardStars = 0;
+        break;
+    }
+
+    if (rewardStars > 0) {
+      _stars += rewardStars;
     }
   }
 
@@ -369,19 +392,18 @@ class PlayerProfile extends ChangeNotifier {
     await save();
     notifyListeners();
   }
- 
+
   Future<void> resetCareStreak() async {
     _careStreak = 0;
     await save();
     notifyListeners();
   }
- 
+
   Future<void> incrementCareStreak() async {
     _careStreak++;
     await save();
     notifyListeners();
   }
-
 
   Future<void> useWater() async {
     if (!_careResources.canUseWater()) {

@@ -75,14 +75,14 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
             'Enemy Info',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            '$enemyCount ${enemyCount == 1 ? 'Enemy' : 'Enemies'} • Lv $minLevel-$maxLevel',
-            style: const TextStyle(color: Colors.white60, fontSize: 14),
+            '$enemyCount ${enemyCount == 1 ? 'Enemy' : 'Enemies'} ( Lv $minLevel-$maxLevel )',
+            style: const TextStyle(color: Colors.white60, fontSize: 16),
           ),
         ],
       ),
@@ -152,8 +152,8 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
               const Icon(Icons.star, color: Colors.amber, size: 18),
               const SizedBox(width: 6),
               Text(
-                '$starsEarned Stars',
-                style: const TextStyle(color: Colors.white60, fontSize: 14),
+                'Earn $starsEarned Stars',
+                style: const TextStyle(color: Colors.white60, fontSize: 16),
               ),
             ],
           ),
@@ -163,14 +163,9 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
   }
 
   Widget _buildPartySelection(PlayerProfile profile) {
-    final plantedSlots = <int>[];
-    for (int i = 0; i < profile.slots.length; i++) {
-      if (profile.getPlantmon(i) != null) {
-        plantedSlots.add(i);
-      }
-    }
+    List<int> plantedSlots = profile.getPlantedSlotIndices();
 
-    final maxPartySize = GameBalance.getMaxPartySizeForFloor(widget.floor);
+    int maxPartySize = GameBalance.getMaxPartySizeForFloor(widget.floor);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,9 +180,9 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
         ),
         const SizedBox(height: 12),
         ...plantedSlots.map((slotIndex) {
-          final plantmon = profile.getPlantmon(slotIndex)!;
+          Plantmon plantmon = profile.getPlantmon(slotIndex)!;
 
-          final isSelected = _selectedSlotIndices.contains(slotIndex);
+          bool isSelected = _selectedSlotIndices.contains(slotIndex);
           return _buildPlantmonCard(plantmon, slotIndex, isSelected);
         }),
       ],
@@ -197,30 +192,30 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
   Widget _buildPlantmonCard(Plantmon plantmon, int slotIndex, bool isSelected) {
     final maxPartySize = GameBalance.getMaxPartySizeForFloor(widget.floor);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1e1e1e),
-        borderRadius: BorderRadius.circular(8),
-        border: Border(
-          left: isSelected
-              ? const BorderSide(color: Color(0xFF66BB6A), width: 3)
-              : BorderSide.none,
-        ),
-      ),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            if (isSelected) {
-              _selectedSlotIndices.remove(slotIndex);
-            } else {
-              if (_selectedSlotIndices.length < maxPartySize) {
-                _selectedSlotIndices.add(slotIndex);
-              }
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _selectedSlotIndices.remove(slotIndex);
+          } else {
+            if (_selectedSlotIndices.length < maxPartySize) {
+              _selectedSlotIndices.add(slotIndex);
             }
-          });
-        },
-        borderRadius: BorderRadius.circular(8),
+          }
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1e1e1e),
+          borderRadius: BorderRadius.circular(8),
+          border: Border(
+            left: isSelected
+                ? BorderSide(color: Color(0xFF66BB6A), width: 3)
+                : BorderSide.none,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -252,19 +247,11 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Lv ${plantmon.level} • HP: ${plantmon.hp}',
+                      'Lv ${plantmon.level} | HP: ${plantmon.hp} | ATK: ${plantmon.attack} | DEF: ${plantmon.defense}',
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 13,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _buildStatBadge('ATK: ${plantmon.attack}'),
-                        const SizedBox(width: 6),
-                        _buildStatBadge('DEF: ${plantmon.defense}'),
-                      ],
                     ),
                   ],
                 ),
@@ -279,13 +266,6 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildStatBadge(String text) {
-    return Text(
-      text,
-      style: const TextStyle(color: Colors.white54, fontSize: 12),
     );
   }
 
@@ -332,6 +312,16 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
     );
   }
 
+  Widget _buildPlantmonImage(Plantmon plantmon) {
+    final typeCapitalized = plantmon.type.replaceFirst(
+      plantmon.type[0],
+      plantmon.type[0].toUpperCase(),
+    );
+    final spritePath = 'assets/images/plants/$typeCapitalized.png';
+
+    return Image.asset(spritePath, fit: BoxFit.contain);
+  }
+
   void _startBattle(PlayerProfile profile) {
     final party = BattleParty(
       plantmonSlotIndices: List.from(_selectedSlotIndices),
@@ -358,15 +348,5 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildPlantmonImage(Plantmon plantmon) {
-    final typeCapitalized = plantmon.type.replaceFirst(
-      plantmon.type[0],
-      plantmon.type[0].toUpperCase(),
-    );
-    final spritePath = 'assets/images/plants/$typeCapitalized.png';
-
-    return Image.asset(spritePath, fit: BoxFit.contain);
   }
 }
