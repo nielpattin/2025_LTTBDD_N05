@@ -212,7 +212,7 @@ class PopupNotification extends PositionComponent {
           fontSize: 18, // Large and readable
           fontWeight: FontWeight.bold,
           shadows: [
-            // Black outline (8 directions for strong visibility)
+            // Black outline (8 directions)
             Shadow(offset: Offset(-2, -2), color: ui.Color(0xFF000000)),
             Shadow(offset: Offset(2, -2), color: ui.Color(0xFF000000)),
             Shadow(offset: Offset(-2, 2), color: ui.Color(0xFF000000)),
@@ -248,8 +248,8 @@ class PopupNotification extends PositionComponent {
       ]),
     );
 
-    // Remove after animation completes (1 second)
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    // Remove after animation completes (1.5 second)
+    Future.delayed(const Duration(milliseconds: 1500), () {
       if (isMounted) removeFromParent();
     });
   }
@@ -495,7 +495,7 @@ class PlantmonView extends PositionComponent {
     final wasAttacking = entity.isAttacking;
     entity = newEntity;
     if (!wasAttacking && entity.isAttacking && !isAnimatingAttack) {
-      _performAttackAnimation();
+      // _performAttackAnimation();
     }
 
     if (plantSprite != null) {
@@ -542,55 +542,5 @@ class PlantmonView extends PositionComponent {
       return;
     }
     game.battleState.trySelectTarget(entity.id);
-  }
-
-  void _performAttackAnimation() {
-    if (isAnimatingAttack) return;
-
-    final game = findGame() as BattleCanvasGame?;
-    if (game == null) {
-      return;
-    }
-
-    // Find target position
-    final targetEntity = game.battleState.timeline.firstWhere(
-      (e) => e.id == entity.targetId,
-      orElse: () => entity,
-    );
-
-    final targetView = game._plantViews[targetEntity.id];
-    if (targetView == null) {
-      return;
-    }
-
-    isAnimatingAttack = true;
-    originalPosition ??= position.clone();
-
-    // Calculate direction toward target
-    final direction = (targetView.position - position).normalized();
-    final attackDistance = 100.0; // Move 100 pixels toward target
-    final attackOffset = direction * attackDistance;
-
-    // Move toward target
-    add(
-      MoveByEffect(
-        attackOffset,
-        EffectController(duration: 0.2, curve: Curves.easeOut),
-        onComplete: () {
-          // Return to original position
-          if (originalPosition != null) {
-            add(
-              MoveToEffect(
-                originalPosition!,
-                EffectController(duration: 0.2, curve: Curves.easeIn),
-                onComplete: () {
-                  isAnimatingAttack = false;
-                },
-              ),
-            );
-          }
-        },
-      ),
-    );
   }
 }

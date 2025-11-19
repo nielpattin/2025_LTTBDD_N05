@@ -4,7 +4,6 @@ import '../game/player_profile.dart';
 import '../models/plantmon.dart';
 import '../models/care_resources.dart';
 import '../services/care_service.dart';
-import '../providers/rewards_state.dart';
 import '../widgets/notification_bar.dart' as notification;
 
 class PlantViewScreen extends StatelessWidget {
@@ -425,20 +424,8 @@ class PlantViewScreen extends StatelessWidget {
     Plantmon plantmon,
   ) async {
     final profile = context.read<PlayerProfile>();
-    final rewards = context.read<RewardsState>();
 
     final updatedPlantmon = await CareService.performWater(profile, plantmon);
-
-    if (CareService.shouldDropRareItem(updatedPlantmon)) {
-      await rewards.addRareItemDrop();
-      if (context.mounted) {
-        notification.NotificationBar.success(
-          context,
-          '\ud83c\udf81 Rare item dropped during care!',
-          duration: const Duration(seconds: 3),
-        );
-      }
-    }
 
     await profile.updateCareStreak();
 
@@ -464,23 +451,11 @@ class PlantViewScreen extends StatelessWidget {
     Plantmon plantmon,
   ) async {
     final profile = context.read<PlayerProfile>();
-    final rewards = context.read<RewardsState>();
 
     final updatedPlantmon = await CareService.performFertilize(
       profile,
       plantmon,
     );
-
-    if (CareService.shouldDropRareItem(updatedPlantmon)) {
-      await rewards.addRareItemDrop();
-      if (context.mounted) {
-        notification.NotificationBar.success(
-          context,
-          '\ud83c\udf81 Rare item dropped during care!',
-          duration: const Duration(seconds: 3),
-        );
-      }
-    }
 
     await profile.updateCareStreak();
 

@@ -406,20 +406,21 @@ class BattleState extends ChangeNotifier {
 
   /// Player selects a target for the pending action
   bool trySelectTarget(String targetId) {
+    // Check if we are in target selection mode
     if (!_isSelectingTarget || _pendingActorId == null) {
       return false;
     }
-
+    // Find the actor entity
     final actorIndex = _timeline.indexWhere((e) => e.id == _pendingActorId);
     if (actorIndex == -1) {
       return false;
     }
-
+    // Ensure the actor is still awaiting input
     final actor = _timeline[actorIndex];
     if (!actor.isPlayer || !actor.isAwaitingInput) {
       return false;
     }
-
+    // Find the target entity
     final targetIndex = _timeline.indexWhere(
       (entity) => entity.id == targetId && !entity.isPlayer,
     );
@@ -427,6 +428,7 @@ class BattleState extends ChangeNotifier {
       return false;
     }
 
+    // Ensure the target is alive
     final target = _timeline[targetIndex];
     if (target.isDead) {
       return false;

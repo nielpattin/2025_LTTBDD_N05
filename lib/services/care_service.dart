@@ -59,11 +59,6 @@ class CareService {
     return CareQuality.good;
   }
 
-  static bool shouldDropRareItem(Plantmon plantmon) {
-    // 5% chance on any care action
-    return DateTime.now().millisecond < 50;
-  }
-
   /// Get care quality description
   static String getQualityDescription(CareQuality quality) {
     switch (quality) {
