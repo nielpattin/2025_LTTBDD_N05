@@ -56,6 +56,7 @@ class PlayerProfile extends ChangeNotifier {
     return _slots.where((slot) => slot.plantmon != null).length;
   }
 
+  /// Returns the indices of slots that have Plantmon
   List<int> getPlantedSlotIndices() {
     final List<int> indices = [];
     for (int i = 0; i < _slots.length; i++) {

@@ -540,11 +540,7 @@ class ShopScreen extends StatelessWidget {
   }
 
   Widget _buildPlantmonImage(Plantmon plantmon) {
-    final typeCapitalized = plantmon.type.replaceFirst(
-      plantmon.type[0],
-      plantmon.type[0].toUpperCase(),
-    );
-    final spritePath = 'assets/images/plants/$typeCapitalized.png';
+    final spritePath = 'assets/images/plants/${plantmon.name}.png';
 
     return Image.asset(
       spritePath,
@@ -561,7 +557,7 @@ class ShopScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                plantmon.type,
+                plantmon.name,
                 style: const TextStyle(color: Colors.white, fontSize: 12),
                 textAlign: TextAlign.center,
               ),

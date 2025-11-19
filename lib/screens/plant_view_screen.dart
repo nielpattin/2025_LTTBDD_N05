@@ -515,11 +515,7 @@ class PlantViewScreen extends StatelessWidget {
   }
 
   Widget _buildPlantmonImageSmall(Plantmon plantmon) {
-    final typeCapitalized = plantmon.type.replaceFirst(
-      plantmon.type[0],
-      plantmon.type[0].toUpperCase(),
-    );
-    final spritePath = 'assets/images/plants/$typeCapitalized.png';
+    final spritePath = 'assets/images/plants/${plantmon.name}.png';
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
@@ -528,7 +524,7 @@ class PlantViewScreen extends StatelessWidget {
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
           return const Center(
-            child: Text('🌿', style: TextStyle(fontSize: 32)),
+            child: Text('\ud83c\udf3f', style: TextStyle(fontSize: 32)),
           );
         },
       ),

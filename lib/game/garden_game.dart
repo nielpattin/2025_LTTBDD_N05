@@ -139,7 +139,7 @@ class PlantEntity extends PositionComponent
     );
 
     try {
-      final imagePath = 'assets/images/plants/${plantmon.type}.png';
+      final imagePath = 'assets/images/plants/${plantmon.name}.png';
 
       final image = await game.images.load(imagePath);
       add(
@@ -150,7 +150,6 @@ class PlantEntity extends PositionComponent
         ),
       );
     } catch (e) {
-
       // Fallback: green box with name
       add(
         RectangleComponent(

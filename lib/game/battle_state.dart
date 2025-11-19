@@ -134,7 +134,6 @@ class BattleState extends ChangeNotifier {
 
       final plantmon = Plantmon(
         id: generatePlantmonId(),
-        type: enemyName,
         name: enemyName,
         level: enemyLevel,
         exp: 0,

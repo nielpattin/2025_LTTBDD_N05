@@ -193,7 +193,6 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
     final maxPartySize = GameBalance.getMaxPartySizeForFloor(widget.floor);
 
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
       onTap: () {
         setState(() {
           if (isSelected) {
@@ -221,14 +220,14 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
           child: Row(
             children: [
               Container(
-                width: 50,
-                height: 50,
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
                   color: const Color(0xFF2a2a2a),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
                   child: _buildPlantmonImage(plantmon),
                 ),
               ),
@@ -313,11 +312,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
   }
 
   Widget _buildPlantmonImage(Plantmon plantmon) {
-    final typeCapitalized = plantmon.type.replaceFirst(
-      plantmon.type[0],
-      plantmon.type[0].toUpperCase(),
-    );
-    final spritePath = 'assets/images/plants/$typeCapitalized.png';
+    final spritePath = 'assets/images/plants/${plantmon.name}.png';
 
     return Image.asset(spritePath, fit: BoxFit.contain);
   }

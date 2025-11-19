@@ -2,7 +2,6 @@ import '../config/game_balance.dart';
 
 class Plantmon {
   final String id;
-  final String type;
   final String name;
   final int level;
   final int exp;
@@ -13,7 +12,6 @@ class Plantmon {
 
   Plantmon({
     required this.id,
-    required this.type,
     required this.name,
     required this.level,
     required this.exp,
@@ -55,7 +53,6 @@ class Plantmon {
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'id': id,
-      'type': type,
       'name': name,
       'level': level,
       'exp': exp,
@@ -69,7 +66,6 @@ class Plantmon {
   factory Plantmon.fromJson(Map<String, dynamic> json) {
     try {
       final Object? idVal = json['id'];
-      final Object? typeVal = json['type'];
       final Object? nameVal = json['name'];
       final Object? levelVal = json['level'];
       final Object? expVal = json['exp'];
@@ -79,7 +75,6 @@ class Plantmon {
       final Object? defenseVal = json['defense'];
 
       if (idVal == null) throw Exception('Plantmon id is null');
-      if (typeVal == null) throw Exception('Plantmon type is null');
       if (nameVal == null) throw Exception('Plantmon name is null');
       if (levelVal == null) throw Exception('Plantmon level is null');
       if (expVal == null) throw Exception('Plantmon exp is null');
@@ -90,7 +85,6 @@ class Plantmon {
 
       return Plantmon(
         id: idVal as String,
-        type: typeVal as String,
         name: nameVal as String,
         level: levelVal as int,
         exp: expVal as int,
@@ -106,7 +100,6 @@ class Plantmon {
 
   Plantmon copyWith({
     String? id,
-    String? type,
     String? name,
     int? level,
     int? exp,
@@ -117,7 +110,6 @@ class Plantmon {
   }) {
     return Plantmon(
       id: id ?? this.id,
-      type: type ?? this.type,
       name: name ?? this.name,
       level: level ?? this.level,
       exp: exp ?? this.exp,
@@ -130,6 +122,6 @@ class Plantmon {
 
   @override
   String toString() {
-    return 'Plantmon(id: $id, name: $name, level: $level, type: $type)';
+    return 'Plantmon(id: $id, name: $name, level: $level)';
   }
 }

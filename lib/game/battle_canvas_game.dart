@@ -280,7 +280,7 @@ class PlantmonView extends PositionComponent {
       // Use sprite override if available (for enemies), otherwise construct path
       final spritePath =
           entity.spriteOverride ??
-          'assets/images/plants/${entity.plantmon.type}.png';
+          'assets/images/plants/${entity.plantmon.name}.png';
 
       final spriteImage = await Sprite.load(spritePath);
       plantSprite = SpriteComponent(
@@ -458,16 +458,12 @@ class PlantmonView extends PositionComponent {
         ..color = const ui.Color(0xFFFF0000)
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 5;
-      
+
       // Add pulsing animation effect
       _targetRing!.removeWhere((component) => component is OpacityEffect);
       _targetRing!.add(
         OpacityEffect.fadeOut(
-          EffectController(
-            duration: 0.6,
-            alternate: true,
-            infinite: true,
-          ),
+          EffectController(duration: 0.6, alternate: true, infinite: true),
         ),
       );
     } else {
@@ -475,7 +471,7 @@ class PlantmonView extends PositionComponent {
         ..color = Colors.transparent
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 3;
-      
+
       // Remove pulsing animation
       _targetRing!.removeWhere((component) => component is OpacityEffect);
     }
@@ -506,17 +502,17 @@ class PlantmonView extends PositionComponent {
       if (entity.isPlayingDeathAnimation) {
         final progress = entity.deathAnimationProgress;
         final opacity = (255 * (1.0 - progress)).round().clamp(0, 255);
-        
+
         final flashCycle = (progress * 10).floor() % 2;
         final isRed = flashCycle == 0;
-        
+
         plantSprite!.paint.color = ui.Color.fromARGB(
           opacity,
           255,
           isRed ? 100 : 255,
           isRed ? 100 : 255,
         );
-        
+
         final scale = 1.0 - (progress * progress);
         plantSprite!.scale = Vector2.all(scale);
       } else if (entity.isDead) {
@@ -561,7 +557,6 @@ class PlantmonView extends PositionComponent {
       (e) => e.id == entity.targetId,
       orElse: () => entity,
     );
-
 
     final targetView = game._plantViews[targetEntity.id];
     if (targetView == null) {

@@ -312,7 +312,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            plantmon.type.toUpperCase(),
+                            plantmon.name.toUpperCase(),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -400,11 +400,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildPlantmonImage(Plantmon plantmon) {
-    final typeCapitalized = plantmon.type.replaceFirst(
-      plantmon.type[0],
-      plantmon.type[0].toUpperCase(),
-    );
-    final spritePath = 'assets/images/plants/$typeCapitalized.png';
+    final spritePath = 'assets/images/plants/${plantmon.name}.png';
 
     return Image.asset(
       spritePath,

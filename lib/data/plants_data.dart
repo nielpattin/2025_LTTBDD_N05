@@ -79,7 +79,6 @@ Plantmon generateRandomPlantmon({
 
   return Plantmon(
     id: generatePlantmonId(),
-    type: getPlantNameFromSprite(sprite),
     name: getPlantNameFromSprite(sprite),
     level: targetLevel,
     exp: 0,
