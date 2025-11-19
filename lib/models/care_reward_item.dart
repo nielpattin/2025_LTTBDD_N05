@@ -1,11 +1,5 @@
 /// Enum for reward item types
-enum RewardItemType {
-  evolutionItem,
-  newSkill,
-  legendaryEvolution,
-  rareItem,
-  coin,
-}
+enum RewardItemType { evolutionItem, legendaryEvolution, rareItem, coin }
 
 /// Model for care system reward items
 class CareRewardItem {
@@ -34,18 +28,6 @@ class CareRewardItem {
       type: RewardItemType.evolutionItem,
       rarity: 4,
       iconEmoji: '💎',
-    );
-  }
-
-  factory CareRewardItem.newSkill() {
-    return const CareRewardItem(
-      id: 'reward_new_skill_14day',
-      name: 'Skill Tome',
-      description:
-          'Unlocked after 14-day care streak. Teaches a new powerful skill.',
-      type: RewardItemType.newSkill,
-      rarity: 4,
-      iconEmoji: '📖',
     );
   }
 

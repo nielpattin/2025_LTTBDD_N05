@@ -108,8 +108,6 @@ class GameBalance {
   static const double enemySpeedMinMultiplier = 0.9;
   static const double enemySpeedMaxMultiplier = 1.1;
 
-  static const int baseSkillCooldown = 3;
-
   // ==========================================
   // TOWER FLOOR GENERATION
   // ==========================================
