@@ -34,9 +34,7 @@ final availablePlantmonSprites = [
 
 final rarityStatMultipliers = {
   Rarity.common: GameBalance.commonMultiplier,
-  Rarity.uncommon: GameBalance.uncommonMultiplier,
   Rarity.rare: GameBalance.rareMultiplier,
-  Rarity.epic: GameBalance.epicMultiplier,
   Rarity.legendary: GameBalance.legendaryMultiplier,
 };
 
@@ -96,14 +94,10 @@ List<Plantmon> generateSeedBall() {
   for (int i = 0; i < 3; i++) {
     final rarityRoll = random.nextDouble() * 100;
     Rarity rarity;
-    if (rarityRoll < 70) {
+    if (rarityRoll < 80) {
       rarity = Rarity.common;
-    } else if (rarityRoll < 90) {
-      rarity = Rarity.uncommon;
     } else if (rarityRoll < 98) {
       rarity = Rarity.rare;
-    } else if (rarityRoll < 99.5) {
-      rarity = Rarity.epic;
     } else {
       rarity = Rarity.legendary;
     }

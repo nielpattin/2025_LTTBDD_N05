@@ -304,7 +304,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: _buildPlantmonImage(plantmon),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _buildPlantmonImage(plantmon),
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -332,16 +335,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             label: 'HEALTH',
                             current: plantmon.hp,
                             maxValue: _statMaxByName['health']!,
-                          ),
-                          _buildStatBar(
-                            label: 'ATTACK',
-                            current: plantmon.attack,
-                            maxValue: _statMaxByName['attack']!,
-                          ),
-                          _buildStatBar(
-                            label: 'DEFENSE',
-                            current: plantmon.defense,
-                            maxValue: _statMaxByName['defense']!,
                           ),
                           _buildStatBar(
                             label: 'ATTACK',

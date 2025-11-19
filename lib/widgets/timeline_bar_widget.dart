@@ -135,7 +135,7 @@ class TimelineBarWidget extends StatelessWidget {
 
     final Color baseColor = isPlayer ? Colors.white : Colors.redAccent;
     final Color borderColor = baseColor;
-    final Color fillColor = baseColor.withValues(alpha: 0.25);
+    final Color fillColor = const Color(0xFF1e1e1e); // Opaque dark background
 
     final double stemHeight = markerGap + 26;
     final double top = isPlayer

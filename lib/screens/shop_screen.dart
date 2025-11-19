@@ -335,10 +335,10 @@ class ShopScreen extends StatelessWidget {
         rarity = Rarity.common;
         break;
       case BallTier.rare:
-        rarity = Rarity.uncommon;
+        rarity = Rarity.rare;
         break;
       case BallTier.legendary:
-        rarity = Rarity.rare;
+        rarity = Rarity.legendary;
         break;
     }
 

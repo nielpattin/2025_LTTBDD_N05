@@ -54,9 +54,7 @@ class GameBalance {
 
   /// Rarity stat multipliers
   static const double commonMultiplier = 1.0;
-  static const double uncommonMultiplier = 1.2; // Used for Rare Ball
   static const double rareMultiplier = 1.2;
-  static const double epicMultiplier = 1.5;
   static const double legendaryMultiplier = 2.0;
 
   /// Level scaling multiplier per level

@@ -26,12 +26,8 @@ class BattleScreen extends StatefulWidget {
   State<BattleScreen> createState() => _BattleScreenState();
 }
 
-class _BattleScreenState extends State<BattleScreen>
-    with SingleTickerProviderStateMixin {
+class _BattleScreenState extends State<BattleScreen> {
   late final BattleCanvasGame _battleCanvasGame;
-  bool _battleInitialized = false;
-  late AnimationController _blinkController;
-  late Animation<Color?> _blinkAnimation;
 
   @override
   void initState() {
@@ -42,31 +38,10 @@ class _BattleScreenState extends State<BattleScreen>
     battleState.onNotification = (message, entityId, {required byPlayer}) {
       _battleCanvasGame.showNotification(message, entityId, byPlayer: byPlayer);
     };
-
-    // Initialize blink animation for casting state
-    _blinkController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _blinkAnimation = ColorTween(
-      begin: const Color(0xFF66BB6A),
-      end: const Color(0xFF66BB6A).withValues(alpha: 0.3),
-    ).animate(_blinkController);
-
-    // Mark battle as initialized after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          _battleInitialized = true;
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
-    _blinkController.dispose();
     super.dispose();
   }
 
@@ -90,15 +65,7 @@ class _BattleScreenState extends State<BattleScreen>
               builder: (context, battleState, _) {
                 return Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.access_time,
-                      size: 16,
-                      color: Colors.amber,
-                    ),
-                    const SizedBox(width: 4),
-                    Text('Turn ${battleState.turnCount}'),
-                  ],
+                  children: [Text('Turn ${battleState.turnCount}')],
                 );
               },
             ),
@@ -106,26 +73,11 @@ class _BattleScreenState extends State<BattleScreen>
         ),
         backgroundColor: const Color(0xFF1a1a1a),
         centerTitle: true,
-        automaticallyImplyLeading: false,
       ),
       body: Container(
         color: const Color(0xFF0a0a0a),
         child: Consumer<BattleState>(
           builder: (context, battleState, _) {
-            // Guard against hot reload showing empty/uninitialized state
-            if (!_battleInitialized ||
-                (!battleState.isRunning && battleState.timeline.isEmpty)) {
-              return Center(
-                child: Text(
-                  'Battle loading...',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 16,
-                  ),
-                ),
-              );
-            }
-
             if (battleState.isBattleOver) {
               return Stack(
                 children: [
@@ -146,7 +98,7 @@ class _BattleScreenState extends State<BattleScreen>
 
             return Column(
               children: [
-                // Timeline bar at top (fixed height)
+                // Timeline bar at top
                 const TimelineBarWidget(),
                 // Battle canvas (50% of remaining space)
                 Expanded(flex: 1, child: GameWidget(game: _battleCanvasGame)),
@@ -157,6 +109,24 @@ class _BattleScreenState extends State<BattleScreen>
           },
         ),
       ),
+      floatingActionButton: Consumer<BattleState>(
+        builder: (context, battleState, _) {
+          final bool isFast = battleState.timeScale > 1.0;
+          return FloatingActionButton(
+            heroTag: 'battleSpeedFab',
+            backgroundColor: isFast
+                ? const Color(0xFFD32F2F)
+                : Colors.grey.shade800,
+            onPressed: () {
+              battleState.setTimeScale(isFast ? 1.0 : 3.0);
+            },
+            child: Text(
+              isFast ? '3x' : '1x',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -165,165 +135,153 @@ class _BattleScreenState extends State<BattleScreen>
     final selectedId = battleState.selectedEntityId;
     TimelineEntity? selectedEntity;
     if (selectedId != null) {
-      try {
-        selectedEntity = battleState.timeline.firstWhere(
-          (entity) => entity.id == selectedId,
-        );
-      } catch (_) {
-        selectedEntity = null;
-      }
+      selectedEntity = battleState.timeline.firstWhere(
+        (entity) => entity.id == selectedId,
+      );
     }
 
-    final bool isSelectingTarget = battleState.isSelectingTarget;
-    final pendingAction = battleState.pendingActionType;
-
-    return Container(
-      color: const Color(0xFF0a0a0a),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildPlayerStatusRow(playerEntities, selectedId),
-              const SizedBox(height: 12),
-              if (isSelectingTarget)
-                _buildTargetInstruction(pendingAction)
-              else if (selectedEntity != null)
-                _buildActionButtons(battleState, selectedEntity)
-              else
-                _buildWaitingLabel(),
-            ],
-          ),
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Column(
+        children: [
+          _buildPlantmonStatusRow(playerEntities, selectedId),
+          const SizedBox(height: 12),
+          if (battleState.isSelectingTarget)
+            _buildTargetInstruction(battleState.pendingActionType)
+          else if (selectedEntity != null)
+            _buildActionButtons(battleState, selectedEntity)
+          else
+            _buildWaitingLabel(),
+        ],
       ),
     );
   }
 
-  Widget _buildPlayerStatusRow(
+  Widget _buildPlantmonStatusRow(
     List<TimelineEntity> playerEntities,
     String? selectedId,
   ) {
-    if (playerEntities.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
     return Row(
       children: playerEntities.map((entity) {
         final isSelected = selectedId == entity.id;
+        final isCasting = entity.isCasting;
+        final isDefending = entity.isDefending;
+
+        // Border color logic
+        final borderColor = isCasting
+            ? Colors.red
+            : isDefending
+            ? Colors.blue
+            : isSelected
+            ? const Color(0xFF66BB6A)
+            : Colors.transparent;
 
         return Expanded(
-          child: AnimatedBuilder(
-            animation: _blinkAnimation,
-            builder: (context, child) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFF66BB6A).withValues(alpha: 0.2)
-                      : const Color(0xFF1e1e1e),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: entity.isCasting
-                        ? _blinkAnimation.value!
-                        : const Color(0xFF66BB6A).withValues(alpha: 0.5),
-                    width: entity.isCasting ? 4 : 2,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+          child: Container(
+            margin: EdgeInsets.only(
+              left: entity == playerEntities.first ? 0 : 6,
+              right: entity == playerEntities.last ? 0 : 6,
+            ),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1e1e1e),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: borderColor,
+                width: (isCasting || isDefending) ? 2 : 1.5,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name & Level
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        // ID Badge (P1, P2)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
+                    Expanded(
+                      child: Text(
+                        entity.plantmon.name,
+                        style: TextStyle(
+                          color: Colors.white.withValues(
+                            alpha: entity.isDead ? 0.4 : 1.0,
                           ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF66BB6A),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            entity.id,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
                         ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            entity.plantmon.name,
-                            style: TextStyle(
-                              color: Colors.white.withValues(
-                                alpha: entity.isDead ? 0.3 : 0.9,
-                              ),
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          'Lv${entity.plantmon.level}',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const SizedBox(height: 6),
                     Text(
-                      'HP ${entity.plantmon.hp}',
+                      'Lv${entity.plantmon.level}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.65),
-                        fontSize: 10,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: (entity.plantmon.hp / entity.plantmon.maxHp)
-                            .clamp(0.0, 1.0),
-                        minHeight: 6,
-                        backgroundColor: Colors.red.shade900,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.green.shade400,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'MP ${entity.mp}',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.65),
-                        fontSize: 10,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: (entity.mp / 100).clamp(0.0, 1.0),
-                        minHeight: 6,
-                        backgroundColor: Colors.blue.shade900,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.cyanAccent,
-                        ),
+                        color: Colors.white.withValues(alpha: 1),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-              );
-            },
+                const SizedBox(height: 8),
+
+                // HP Bar
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value: (entity.plantmon.hp / entity.plantmon.maxHp)
+                              .clamp(0.0, 1.0),
+                          minHeight: 6,
+                          backgroundColor: Colors.red.shade900,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.green.shade400,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${entity.plantmon.hp}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                // MP Bar
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value: (entity.mp / 100).clamp(0.0, 1.0),
+                          minHeight: 6,
+                          backgroundColor: Colors.blue.shade900,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Colors.cyanAccent,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${entity.mp}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       }).toList(),

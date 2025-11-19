@@ -8,6 +8,13 @@ import '../data/plants_data.dart';
 import '../data/tower_floors_data.dart';
 import '../config/game_balance.dart';
 
+class _TowerEnemySpawn {
+  final Plantmon plantmon;
+  final String spritePath;
+
+  const _TowerEnemySpawn({required this.plantmon, required this.spritePath});
+}
+
 class BattleState extends ChangeNotifier {
   BattleState();
 
@@ -17,40 +24,58 @@ class BattleState extends ChangeNotifier {
   String? _selectedEntityId; // for player action selection
   bool _isRunning = false;
   Timer? _updateTimer;
-  double _energyRegenRemainder = 0;
   bool _isTimelinePaused = false;
+
   bool _isSelectingTarget = false;
   ActionType? _pendingActionType;
   String? _pendingActorId;
   bool _started = false; // Track if battle has actually started
-  bool _suppressBattleOverCheck = false; // Hot reload protection
   bool _isExecutingAction = false;
   bool _anyDeathAnimationsPlaying = false;
   int _turnCount = 0; // Prevent concurrent action execution
+  double _timeScale = 1.0;
 
   // Notification callbacks
   void Function(String message, String entityId, {required bool byPlayer})?
   onNotification;
+
   void Function(String entityId)? onInterrupt;
 
   // Getters
   List<TimelineEntity> get timeline => List.unmodifiable(_timeline);
-  int get currentFloor => _currentFloor;
+
   String? get selectedEntityId => _selectedEntityId;
-  bool get isRunning => _isRunning;
+
   bool get isBattleOver =>
-      _started &&
-      !_suppressBattleOverCheck &&
-      !_anyDeathAnimationsPlaying &&
-      _checkBattleOver();
+      _started && !_anyDeathAnimationsPlaying && _checkBattleOver();
+
   bool get isSelectingTarget => _isSelectingTarget;
+
   ActionType? get pendingActionType => _pendingActionType;
+
   int get turnCount => _turnCount;
 
   List<TimelineEntity> get playerEntities =>
       _timeline.where((e) => e.isPlayer && !e.isDead).toList();
+
   List<TimelineEntity> get enemyEntities =>
       _timeline.where((e) => !e.isPlayer && !e.isDead).toList();
+
+  double get timeScale => _timeScale;
+
+  void setTimeScale(double scale) {
+    double clamped = scale;
+    if (clamped < 0.1) {
+      clamped = 0.1;
+    } else if (clamped > 10.0) {
+      clamped = 10.0;
+    }
+    if (_timeScale == clamped) {
+      return;
+    }
+    _timeScale = clamped;
+    notifyListeners();
+  }
 
   // Start battle for tower with timeline system
   void startBattleForTower(List<Plantmon> playerParty, int floor) {
@@ -62,9 +87,9 @@ class BattleState extends ChangeNotifier {
     _pendingActionType = null;
     _pendingActorId = null;
     _started = true;
-    _suppressBattleOverCheck = false;
     _isExecutingAction = false;
     _turnCount = 0;
+    _timeScale = 1.0;
 
     // Add player entities
     for (int i = 0; i < playerParty.length; i++) {
@@ -81,15 +106,16 @@ class BattleState extends ChangeNotifier {
     }
 
     // Generate and add enemy entities
-    final enemiesData = _generateTowerEnemies(floor);
+    final List<_TowerEnemySpawn> enemiesData = _generateTowerEnemies(floor);
     for (int i = 0; i < enemiesData.length; i++) {
+      final _TowerEnemySpawn enemy = enemiesData[i];
       final double speed = _getEntitySpeed(isPlayer: false);
       _timeline.add(
         TimelineEntity(
           id: 'E${i + 1}',
-          plantmon: enemiesData[i]['plantmon'] as Plantmon,
+          plantmon: enemy.plantmon,
           isPlayer: false,
-          spriteOverride: enemiesData[i]['sprite'] as String?,
+          spriteOverride: enemy.spritePath,
           position: GameBalance.enemyStart,
           speed: speed,
         ),
@@ -100,9 +126,9 @@ class BattleState extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Map<String, dynamic>> _generateTowerEnemies(int floor) {
-    final random = Random();
-    final enemies = <Map<String, dynamic>>[];
+  List<_TowerEnemySpawn> _generateTowerEnemies(int floor) {
+    final Random random = Random();
+    final List<_TowerEnemySpawn> enemies = <_TowerEnemySpawn>[];
 
     final enemyCount = GameBalance.getEnemyCount(floor, random);
     final enemyLevel = floor;
@@ -132,7 +158,7 @@ class BattleState extends ChangeNotifier {
           1.0 + ((enemyLevel - 1) * GameBalance.statScalingPerLevel);
       final enemyMultiplier = GameBalance.enemyStatMultiplier * levelMultiplier;
 
-      final plantmon = Plantmon(
+      final Plantmon plantmon = Plantmon(
         id: generatePlantmonId(),
         name: enemyName,
         level: enemyLevel,
@@ -143,7 +169,7 @@ class BattleState extends ChangeNotifier {
         maxHp: (baseHp * enemyMultiplier).round(),
       );
 
-      enemies.add({'plantmon': plantmon, 'sprite': spritePath});
+      enemies.add(_TowerEnemySpawn(plantmon: plantmon, spritePath: spritePath));
     }
 
     return enemies;
@@ -176,16 +202,11 @@ class BattleState extends ChangeNotifier {
   void _updateTimeline(double dt) {
     if (!_isRunning) return;
 
-    bool timelineChanged = false;
-    bool stateChanged = false;
-    bool energyChanged = false;
+    final double scaledDt = dt * _timeScale;
 
-    // Accumulate regen so we only emit energy changes on whole-number ticks
-    _energyRegenRemainder += GameBalance.energyRegenPerSecond * dt;
-    final int energyTicks = _energyRegenRemainder.floor();
-    if (energyTicks > 0) {
-      _energyRegenRemainder -= energyTicks;
-    }
+    bool timelineChanged = false;
+
+    bool stateChanged = false;
 
     for (int i = 0; i < _timeline.length; i++) {
       final entity = _timeline[i];
@@ -202,7 +223,7 @@ class BattleState extends ChangeNotifier {
       }
 
       final oldPosition = entity.position;
-      final double increment = entity.speed * dt;
+      final double increment = entity.speed * scaledDt;
 
       if (entity.phase == TimelinePhase.waiting) {
         entity.position = (entity.position + increment).clamp(
@@ -243,8 +264,8 @@ class BattleState extends ChangeNotifier {
       }
     }
 
-    final bool shouldNotify = timelineChanged || stateChanged || energyChanged;
-    if (shouldNotify) {
+    // Notify listeners if timeline or state changed
+    if (timelineChanged || stateChanged) {
       notifyListeners();
     }
 
@@ -297,8 +318,8 @@ class BattleState extends ChangeNotifier {
         entity.queuedAction = ActionType.attack;
       }
     } else {
-      // Without MP: 30% Defend, 70% Attack
-      if (roll < 0.30) {
+      // Without MP: 20% Defend, 80% Attack
+      if (roll < 0.20) {
         entity.isDefending = true;
         entity.position = 0.0;
         entity.phase = TimelinePhase.waiting;
@@ -331,9 +352,6 @@ class BattleState extends ChangeNotifier {
     if (entityIndex == -1) return;
 
     final entity = _timeline[entityIndex];
-    if (!entity.isPlayer) {
-      return;
-    }
 
     // Check if the entity is ready to choose an action
     if (!entity.isAwaitingInput) {
@@ -386,6 +404,7 @@ class BattleState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Player selects a target for the pending action
   bool trySelectTarget(String targetId) {
     if (!_isSelectingTarget || _pendingActorId == null) {
       return false;
@@ -666,22 +685,6 @@ class BattleState extends ChangeNotifier {
         starsEarned: 0,
       );
     }
-  }
-
-  void reset() {
-    _stopTimeline();
-    _timeline.clear();
-    _selectedEntityId = null;
-    _currentFloor = 1;
-    _isTimelinePaused = false;
-    _isSelectingTarget = false;
-    _pendingActionType = null;
-    _pendingActorId = null;
-    _started = false;
-    _isExecutingAction = false;
-    _anyDeathAnimationsPlaying = false;
-    _turnCount = 0;
-    notifyListeners();
   }
 
   @override
