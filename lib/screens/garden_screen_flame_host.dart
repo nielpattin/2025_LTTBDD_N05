@@ -27,20 +27,28 @@ class _GardenFlameHostState extends State<GardenFlameHost> {
     game = GardenGame(
       slots: slots,
       onTapSlot: (slotIndex) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PlantViewScreen(slotIndex: slotIndex),
-          ),
-        );
+        final profile = context.read<PlayerProfile>();
+        final plantmon = profile.getPlantmon(slotIndex);
+        if (plantmon != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PlantViewScreen(plantmon: plantmon),
+            ),
+          );
+        }
       },
       onTapPlant: (slotIndex) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PlantViewScreen(slotIndex: slotIndex),
-          ),
-        );
+        final profile = context.read<PlayerProfile>();
+        final plantmon = profile.getPlantmon(slotIndex);
+        if (plantmon != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PlantViewScreen(plantmon: plantmon),
+            ),
+          );
+        }
       },
     );
   }

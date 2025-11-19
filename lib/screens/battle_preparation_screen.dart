@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/battle_party.dart';
 import '../models/plantmon.dart';
 import '../game/player_profile.dart';
 import '../game/battle_state.dart';
@@ -228,7 +227,10 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(8),
-                  child: _buildPlantmonImage(plantmon),
+                  child: Image.asset(
+                    'assets/images/plants/${plantmon.name}.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -249,7 +251,8 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
                       'Lv ${plantmon.level} | HP: ${plantmon.hp} | ATK: ${plantmon.attack} | DEF: ${plantmon.defense}',
                       style: const TextStyle(
                         color: Colors.white60,
-                        fontSize: 13,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -270,7 +273,6 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
 
   Widget _buildStartButton(PlayerProfile profile) {
     final canStart = _selectedSlotIndices.isNotEmpty;
-    final maxPartySize = GameBalance.getMaxPartySizeForFloor(widget.floor);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -296,12 +298,10 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
               elevation: 0,
             ),
             child: Text(
-              canStart
-                  ? 'Start Battle (${_selectedSlotIndices.length}/$maxPartySize)'
-                  : 'Select at least 1 Plantmon',
+              'Start Battle',
               style: TextStyle(
                 color: canStart ? Colors.white : Colors.white38,
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -311,17 +311,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
     );
   }
 
-  Widget _buildPlantmonImage(Plantmon plantmon) {
-    final spritePath = 'assets/images/plants/${plantmon.name}.png';
-
-    return Image.asset(spritePath, fit: BoxFit.contain);
-  }
-
   void _startBattle(PlayerProfile profile) {
-    final party = BattleParty(
-      plantmonSlotIndices: List.from(_selectedSlotIndices),
-    );
-
     final battleState = BattleState();
     final plantmons = _selectedSlotIndices
         .map((i) => profile.getPlantmon(i)!)
@@ -335,8 +325,7 @@ class _BattlePreparationScreenState extends State<BattlePreparationScreen> {
         builder: (_) => ChangeNotifierProvider<BattleState>.value(
           value: battleState,
           child: BattleScreen(
-            slotIndex: _selectedSlotIndices.first,
-            party: party,
+            initialParty: plantmons,
             floor: widget.floor,
             isPracticeMode: widget.isPracticeMode,
           ),

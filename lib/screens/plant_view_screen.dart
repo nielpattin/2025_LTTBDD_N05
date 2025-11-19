@@ -8,9 +8,9 @@ import '../providers/rewards_state.dart';
 import '../widgets/notification_bar.dart' as notification;
 
 class PlantViewScreen extends StatelessWidget {
-  final int slotIndex;
+  final Plantmon plantmon;
 
-  const PlantViewScreen({super.key, required this.slotIndex});
+  const PlantViewScreen({super.key, required this.plantmon});
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +29,10 @@ class PlantViewScreen extends StatelessWidget {
         color: const Color(0xFF0a0a0a),
         child: Consumer<PlayerProfile>(
           builder: (context, profile, _) {
-            final plantmon = profile.getPlantmon(slotIndex);
+            // Get latest state of this plantmon
+            final currentPlantmon = profile.getPlantmonById(plantmon.id);
 
-            if (plantmon == null) {
+            if (currentPlantmon == null) {
               return const Center(
                 child: Text(
                   'Plantmon not found',
@@ -48,9 +49,15 @@ class PlantViewScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: _buildPlantmonCard(plantmon)),
+                      Expanded(
+                        flex: 2,
+                        child: _buildPlantmonCard(currentPlantmon),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(flex: 3, child: _buildStatsCard(plantmon)),
+                      Expanded(
+                        flex: 3,
+                        child: _buildStatsCard(currentPlantmon),
+                      ),
                     ],
                   ),
                 ),
@@ -60,7 +67,7 @@ class PlantViewScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Column(
                       children: [
-                        _buildCareCard(plantmon),
+                        _buildCareCard(currentPlantmon),
                         const SizedBox(height: 12),
                       ],
                     ),
@@ -441,7 +448,7 @@ class PlantViewScreen extends StatelessWidget {
       }
     }
 
-    await profile.updatePlantmonInSlot(slotIndex, updatedPlantmon);
+    await profile.updatePlantmon(updatedPlantmon);
 
     if (context.mounted) {
       notification.NotificationBar.success(
@@ -483,7 +490,7 @@ class PlantViewScreen extends StatelessWidget {
       }
     }
 
-    await profile.updatePlantmonInSlot(slotIndex, updatedPlantmon);
+    await profile.updatePlantmon(updatedPlantmon);
 
     if (context.mounted) {
       notification.NotificationBar.success(

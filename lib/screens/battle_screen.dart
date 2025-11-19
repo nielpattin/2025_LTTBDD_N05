@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/battle_state.dart';
 import '../game/player_profile.dart';
-import '../models/battle_party.dart';
+import '../models/plantmon.dart';
 import '../models/timeline_entity.dart';
 import '../widgets/timeline_bar_widget.dart';
 import '../widgets/battle_result_widgets.dart';
@@ -11,15 +11,13 @@ import '../game/battle_canvas_game.dart';
 import '../config/game_balance.dart';
 
 class BattleScreen extends StatefulWidget {
-  final int slotIndex;
-  final BattleParty? party;
+  final List<Plantmon> initialParty;
   final int floor;
   final bool isPracticeMode;
 
   const BattleScreen({
     super.key,
-    required this.slotIndex,
-    this.party,
+    required this.initialParty,
     required this.floor,
     this.isPracticeMode = false,
   });
@@ -93,7 +91,11 @@ class _BattleScreenState extends State<BattleScreen>
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.access_time, size: 16, color: Colors.amber),
+                    const Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: Colors.amber,
+                    ),
                     const SizedBox(width: 4),
                     Text('Turn ${battleState.turnCount}'),
                   ],
@@ -130,7 +132,10 @@ class _BattleScreenState extends State<BattleScreen>
                   Column(
                     children: [
                       const TimelineBarWidget(),
-                      Expanded(flex: 1, child: GameWidget(game: _battleCanvasGame)),
+                      Expanded(
+                        flex: 1,
+                        child: GameWidget(game: _battleCanvasGame),
+                      ),
                       Expanded(flex: 1, child: _buildBottomPanel(battleState)),
                     ],
                   ),
@@ -460,9 +465,7 @@ class _BattleScreenState extends State<BattleScreen>
           color: Colors.black.withValues(alpha: 0.7 * value),
           child: Transform.scale(
             scale: value,
-            child: Center(
-              child: child,
-            ),
+            child: Center(child: child),
           ),
         );
       },
@@ -499,19 +502,13 @@ class _BattleScreenState extends State<BattleScreen>
       }
 
       // Update all party members with exp
-        if (widget.party != null) {
-        for (final slotIndex in widget.party!.plantmonSlotIndices) {
-          final player = profile.getPlantmon(slotIndex);
-          if (player != null) {
-            final updatedPlayer = player.addExp(result.expGained);
-            await profile.updatePlantmonInSlot(slotIndex, updatedPlayer);
-          }
-        }
+      for (final plantmon in widget.initialParty) {
+        final updatedPlayer = plantmon.addExp(result.expGained);
+        await profile.updatePlantmon(updatedPlayer);
       }
 
       await profile.updatePlantmonCount(profile.getTotalPlantmons());
       await profile.unlockSlotsForLevel(profile.level);
-
     }
 
     if (context.mounted) {

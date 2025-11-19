@@ -87,6 +87,15 @@ class PlayerProfile extends ChangeNotifier {
     }
   }
 
+  Plantmon? getPlantmonById(String id) {
+    for (final slot in _slots) {
+      if (slot.plantmon?.id == id) {
+        return slot.plantmon;
+      }
+    }
+    return null;
+  }
+
   Plantmon? getPlantmon(int slotIndex) {
     if (slotIndex >= 0 && slotIndex < _slots.length) {
       return _slots[slotIndex].plantmon;
@@ -101,6 +110,17 @@ class PlayerProfile extends ChangeNotifier {
         _slots[slotIndex] = slot.plant(plantmon);
         await _saveGarden();
         notifyListeners();
+      }
+    }
+  }
+
+  Future<void> updatePlantmon(Plantmon updatedPlantmon) async {
+    for (int i = 0; i < _slots.length; i++) {
+      if (_slots[i].plantmon?.id == updatedPlantmon.id) {
+        _slots[i] = _slots[i].plant(updatedPlantmon);
+        await _saveGarden();
+        notifyListeners();
+        return;
       }
     }
   }
